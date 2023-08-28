@@ -1,0 +1,27 @@
+default:
+  image: registry.csc.sibsutis.ru/cpp/ci
+
+.build-script: &build-script
+  - cmake --preset=$PRESET
+  - cmake --build --preset=$PRESET
+  - ctest --preset=$PRESET --no-tests=error --output-on-failure
+  - 'if [ "$RUN_CSC_CPP_LINT" ]; then csc-cpp-lint --preset=$PRESET; fi'
+
+build:
+  stage: build
+  script:
+    - *build-script
+  parallel:
+    matrix:
+      - CC: gcc
+        CXX: g++
+        PRESET: debug
+        RUN_CSC_CPP_LINT: run_csc_cpp_lint
+      - CC: gcc
+        CXX: g++
+        PRESET: release
+      - CC: clang
+        CXX: clang++
+        PRESET:
+          - debug
+          - release
