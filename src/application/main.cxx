@@ -1,5 +1,6 @@
 #include <iostream>
-#include "../fsp/fsp.h"
+#include <fsp/fsp.h>
+#include <cxxopts.hpp>
 #include "macros.h"
 
 void print_manual();

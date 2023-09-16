@@ -7,16 +7,23 @@ add_library(
     fsp.h
 )
 
-add_compile_options(
-    ${target_name}
-    -Wextra
-    -Werror
-    -Wall
-    -pedantic
-)
-
 target_include_directories(
     ${target_name}
     PUBLIC
-        ${CMAKE_CURRENT_LIST_DIR}
+        ${PROJECT_SOURCE_DIR}/src
 )
+
+add_executable(
+  test-fsp
+  fsp.test.cxx
+)
+target_link_libraries(
+  test-fsp
+  GTest::gtest_main
+  fsp
+)
+
+include(GoogleTest)
+gtest_discover_tests(test-fsp)
+
+
