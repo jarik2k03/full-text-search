@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
+#include "fsp/fsp.h"
 
-// Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions) {
-  // Expect two strings not to be equal.
-  EXPECT_STRNE("hello", "world");
-  // Expect equality.
-  EXPECT_EQ(7 * 6, 42);
+TEST(CheckCalc, onSum) {
+  fsp_calculator fspc;
+  double result = fspc.summ(92.1, 4.4);
+  
+  EXPECT_DOUBLE_EQ(result, 96.5);
 }

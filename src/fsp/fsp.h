@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include <string.h>
 #include <iostream>
 
@@ -11,6 +10,6 @@ private:
 public:
     fsp_calculator();
     ~fsp_calculator();
-    int summ(const char** argv);
-    void print_result();
+    double summ(double _st, double _nd);
+    void print_value(double value);
 };

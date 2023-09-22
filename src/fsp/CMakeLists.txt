@@ -13,10 +13,16 @@ target_include_directories(
         ${PROJECT_SOURCE_DIR}/src
 )
 
+
+
 add_executable(
   test-fsp
   fsp.test.cxx
 )
+
+add_test(NAME Fsp_summ COMMAND test-fsp)
+enable_testing()
+
 target_link_libraries(
   test-fsp
   GTest::gtest_main
