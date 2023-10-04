@@ -1,24 +1,23 @@
-set(target_name application)
-
-add_executable(${target_name})
+add_executable(application)
 
 add_compile_options(
-    ${target_name}
+    application
     -Wall -Wextra -Werror -pedantic
 )
 
 target_sources(
-    ${target_name}
+    application
     PRIVATE
         main.cxx
 )
 
 # Link libraries
 target_link_libraries(
-    ${target_name}
+    application
     PRIVATE
-        fsp
+        parser
         cxxopts
+        pugixml
 )
 
 

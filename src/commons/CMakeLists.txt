@@ -1,35 +1,32 @@
-set(target_name fsp)
 
 # Make library
 add_library(
-    ${target_name} STATIC
-    fsp.cxx
-    fsp.h
+    parser STATIC
+    parser.cxx
+    parser.h
 )
 
 target_include_directories(
-    ${target_name}
+    parser
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src
 )
 
-
-
 add_executable(
-  test-fsp
-  fsp.test.cxx
+  test-parser
+  parser.test.cxx
 )
 
-add_test(NAME Fsp_summ COMMAND test-fsp)
+add_test(NAME Fsp_summ COMMAND test-parser)
 enable_testing()
 
 target_link_libraries(
-  test-fsp
+  test-parser
   GTest::gtest_main
-  fsp
+  parser
 )
 
 include(GoogleTest)
-gtest_discover_tests(test-fsp)
+gtest_discover_tests(test-parser)
 
 

@@ -1,2 +1,2 @@
-add_subdirectory(fsp)
+add_subdirectory(commons)
 add_subdirectory(application)

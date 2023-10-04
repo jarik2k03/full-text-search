@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fts>
+   <ngram min="3" max="6">
+      <stop_words>
+        <word>a</word>
+        <word>an</word>
+        <word>a</word>
+        <word>an</word>
+        <word>and</word>
+        <word>are</word>
+        <word>as</word>
+        <word>at</word>
+        <word>be</word>
+        <word>but</word>
+        <word>by</word>
+        <word>for</word>
+        <word>if</word>
+        <word>in</word>
+        <word>into</word>
+        <word>is</word>
+        <word>it</word>
+        <word>no</word>
+        <word>not</word>
+        <word>of</word>
+        <word>on</word>
+        <word>or</word>
+        <word>s</word>
+        <word>such</word>
+        <word>t</word>
+        <word>that</word>
+        <word>the</word>
+        <word>their</word>
+        <word>then</word>
+        <word>there</word>
+        <word>these</word>
+        <word>they</word>
+        <word>this</word>
+        <word>to</word>
+        <word>was</word>
+        <word>will</word>
+        <word>with</word>
+      </stop_words>
+   </ngram>
+</fts>
