@@ -1,16 +1,29 @@
 #include "parser.h"
 
-fsp_calculator::fsp_calculator() {
-  result = 0;
+#define STOPWORDNODE 
+
+config_properties::config_properties(const std::string& name) {
+
+  char* s = const_cast<char*>(name.c_str());
+  config_name.copy(s, name.capacity());
 }
 
-fsp_calculator::~fsp_calculator() {
+config_properties::~config_properties() {
+  
 }
 
-double fsp_calculator::summ(double _st, double _nd) {
-  return _st + _nd;
-}
+bool config_properties::read_properties() {
+  pugi::xml_document doc;
+  pugi::xml_parse_result parsed = doc.load_file(config_name.c_str());
+  if (!parsed)
+    return false;
 
-void fsp_calculator::print_value(double value) {
-  std::cout << "Хранимый результат: " << value << "\n";
+  for (pugi::xml_node stop_words: doc.child("fts").child("ngram").child("stop_words").children("words"))
+  {
+    
+  }
+  
+
+  return true;
+
 }

@@ -12,6 +12,14 @@ target_include_directories(
         ${PROJECT_SOURCE_DIR}/src
 )
 
+target_link_libraries(
+    parser
+    PUBLIC
+    pugixml
+
+)
+
+
 add_executable(
   test-parser
   parser.test.cxx
