@@ -8,14 +8,15 @@
 
 class config_properties {
  private:
-  uint8_t min, max; // ngram length
+  uint min, max; // ngram length
   std::string config_name;
+  std::string path_to_config;
 
  public:
-  config_properties(const std::string& name); 
-  ~config_properties();
-  uint8_t get_min_len() {return min;}
-  uint8_t get_max_len() {return max;}
+  config_properties(const std::string& name, const std::string& path); 
+  int get_min_len() {return min;}
+  int get_max_len() {return max;}
   bool read_properties();
+  void print_properties();
 
 };
