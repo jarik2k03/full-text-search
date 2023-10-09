@@ -18,17 +18,21 @@ bool config_properties::read_properties() {
   min = ngram.attribute("min").as_uint();
   max = ngram.attribute("max").as_uint();
 
-  for (pugi::xml_node stop_words: doc.child("fts").child("ngram").child("stop_words").children("word"))
-  {
-    const pugi::xml_text word = stop_words.text();
-    std::cout << word.as_string() << "\n"; 
-  }
-  
+  pugi::xml_node stop_words = doc.child("fts").child("ngram").child("stop_words");
 
+  for (pugi::xml_node i: stop_words.children("word"))
+  {
+    stopwords.insert((char*)i.text().as_string());
+
+    //std::cout << word.as_string() << "\n"; 
+
+  }
   return false;
 }
 
 void config_properties::print_properties() {
-  std::cout << "Ngram min: " << min << "\nNgram max: " << max << "\nConfig: " << path_to_config << config_name;
+  std::cout << "Ngram min: " << min << "\nNgram max: " << max << "\nConfig: " << path_to_config << config_name << "\n";
+  for (char* it : stopwords) std::cout << it <<"\t";
+  std::cout << "\n";
 
 }

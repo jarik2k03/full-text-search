@@ -4,6 +4,8 @@
 #include <pugixml.hpp>
 #include <string.h>
 #include <iostream>
+#include <unordered_set>
+
 
 
 class config_properties {
@@ -11,6 +13,8 @@ class config_properties {
   uint min, max; // ngram length
   std::string config_name;
   std::string path_to_config;
+  std::unordered_set<char*> stopwords;
+  
 
  public:
   config_properties(const std::string& name, const std::string& path); 

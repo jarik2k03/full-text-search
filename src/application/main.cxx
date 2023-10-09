@@ -17,17 +17,17 @@ int main(int argc, char** argv) {
   bool r;
 
   Options opt("FullTextSearch", "Okay, fts!");
-  opt.add_options()("config", "XML user settings", value<std::string>()->default_value("config.xml"));
+  opt.add_options()("config", "XML user settings", value<std::string>()->implicit_value("config.xml"));
 
   ParseResult pr = opt.parse(argc, argv);
 
   if (pr.count("config")) {
     config_properties user_config (pr["config"].as<std::string>(), "user/");
     r = user_config.read_properties();
-
     ASSERT(r, "Не удалось найти конфиг");
-
     user_config.print_properties();
+
+
 
   }
 

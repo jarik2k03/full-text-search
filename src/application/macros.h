@@ -1,4 +1,4 @@
 #define ASSERT(error, msg) \
-  if (error == true)       \
+  if (error == true) {      \
     std::cout << "Возникла ошибка: " << msg << '\n'; \
-    exit(-1);
+    exit(-1); }
