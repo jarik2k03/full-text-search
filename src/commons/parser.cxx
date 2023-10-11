@@ -1,13 +1,12 @@
 #include "parser.h"
 
-config_properties::config_properties(const std::string& name, const std::string& path) {
 
-  config_name = name;
-  path_to_config = path;
-}
 
-bool config_properties::read_properties() {
+Parser::Parser(cstr& name, cstr& path) : config_name(name), path_to_config(path) {  }
+
+bool Parser::read_config() {
   
+  if(config_name.empty() || path_to_config.empty()) return true;
   std::string docpath = path_to_config + config_name;
   pugi::xml_document doc;
   pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
@@ -23,14 +22,12 @@ bool config_properties::read_properties() {
   for (pugi::xml_node i: stop_words.children("word"))
   {
     stopwords.insert((char*)i.text().as_string());
-
     //std::cout << word.as_string() << "\n"; 
-
   }
   return false;
 }
 
-void config_properties::print_properties() {
+void Parser::print_config() {
   std::cout << "Ngram min: " << min << "\nNgram max: " << max << "\nConfig: " << path_to_config << config_name << "\n";
   for (char* it : stopwords) std::cout << it <<"\t";
   std::cout << "\n";

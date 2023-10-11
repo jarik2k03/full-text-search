@@ -7,8 +7,17 @@
 #include <unordered_set>
 
 
+using cstr = const std::string;
 
-class config_properties {
+struct ParserResult
+{
+  
+};
+
+
+
+
+class Parser {
  private:
   uint min, max; // ngram length
   std::string config_name;
@@ -17,10 +26,15 @@ class config_properties {
   
 
  public:
-  config_properties(const std::string& name, const std::string& path); 
+  Parser(cstr& name, cstr& path);
+  
+  void clear_comma();
+  bool parse(cstr& raw_str);
+  
   int get_min_len() {return min;}
   int get_max_len() {return max;}
-  bool read_properties();
-  void print_properties();
+  
+  bool read_config();
+  void print_config();
 
 };

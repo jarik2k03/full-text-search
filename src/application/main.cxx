@@ -4,6 +4,7 @@
 #include <iostream>
 #include <assert.h>
 #include "macros.h"
+#include <trie.h>
 
 using namespace cxxopts;
 
@@ -22,10 +23,10 @@ int main(int argc, char** argv) {
   ParseResult pr = opt.parse(argc, argv);
 
   if (pr.count("config")) {
-    config_properties user_config (pr["config"].as<std::string>(), "user/");
-    r = user_config.read_properties();
+    Parser user_config (pr["config"].as<std::string>(), "user/");
+    r = user_config.read_config();
     ASSERT(r, "Не удалось найти конфиг");
-    user_config.print_properties();
+    user_config.print_config();
 
 
 
