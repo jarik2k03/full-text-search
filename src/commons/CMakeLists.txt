@@ -16,7 +16,6 @@ target_link_libraries(
     parser
     PUBLIC
     pugixml
-    trie
 
 )
 

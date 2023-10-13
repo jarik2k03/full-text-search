@@ -3,8 +3,7 @@
 #include <pugixml.hpp>
 #include <iostream>
 #include <assert.h>
-#include "macros.h"
-#include <trie.h>
+#include "../commons/abstractions.h"
 
 using namespace cxxopts;
 
@@ -28,7 +27,10 @@ int main(int argc, char** argv) {
     ASSERT(r, "Не удалось найти конфиг");
     user_config.print_config();
 
+    Parser temp(pr["config"].as<std::string>(), "temp/");
+    temp = user_config;
 
+    temp.print_config();
 
   }
 

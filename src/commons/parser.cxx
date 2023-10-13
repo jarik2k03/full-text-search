@@ -33,3 +33,22 @@ void Parser::print_config() {
   std::cout << "\n";
 
 }
+
+
+
+Parser& Parser::operator=(Parser&& old) {
+  std::cout << "Rval -> выходной вариант с получением по ссылке" << "\n";
+  if (this == &old) return *this; // предотвращение самоопределения
+
+  stopwords.clear();
+  config_name.clear();
+  path_to_config.clear();
+
+  EXCHANGE(old.min, min);
+  EXCHANGE(old.max, max);
+  PEXCHANGE(old.config_name, config_name);
+  PEXCHANGE(old.path_to_config, path_to_config);
+
+  return *this;
+
+}

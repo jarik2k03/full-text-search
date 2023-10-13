@@ -18,7 +18,6 @@ target_link_libraries(
         parser
         cxxopts
         pugixml
-        trie
 )
 
 
