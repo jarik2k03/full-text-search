@@ -13,3 +13,4 @@
 
 using uint = unsigned int;
 using cstr = const std::string;
+using str = std::string;

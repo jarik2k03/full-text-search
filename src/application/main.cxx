@@ -17,7 +17,8 @@ int main(int argc, char** argv) {
   bool r;
 
   Options opt("FullTextSearch", "Okay, fts!");
-  opt.add_options()("config", "XML user settings", value<std::string>()->implicit_value("config.xml"));
+  opt.add_options()("config", "XML user settings", value<std::string>()->implicit_value("config.xml"))
+  ("request", "Raw search request", value<std::string>()->implicit_value("Wikipedia"));
 
   ParseResult pr = opt.parse(argc, argv);
 
@@ -26,13 +27,22 @@ int main(int argc, char** argv) {
     r = user_config.read_config();
     ASSERT(r, "Не удалось найти конфиг");
     user_config.print_config();
+    if (pr.count("request")) {
+      std::string raw = pr["request"].as<std::string>();
+      std::cout << "RawSTR: " << raw << "\n";
 
-    Parser temp(pr["config"].as<std::string>(), "temp/");
-    temp = user_config;
+      user_config.exclude_punct(raw);
+      user_config.exclude_stop_words(raw);
+    
+      std::cout << "WithoutCommaSTR: " << raw << "\n";
 
-    temp.print_config();
-
+      ParserResult my_pr = user_config.parse(raw);
+      my_pr.ngrams_traverse();
+    }
   }
+
+
+
 
   return 0;
 }
