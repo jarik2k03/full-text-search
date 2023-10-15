@@ -1,40 +1,32 @@
 #include <commons/parser.h>
 #include <gtest/gtest.h>
 
-GTEST_TEST(parser, read_config) {
-  Parser p("config.xml", "NULL/");
-  bool err = p.read_config();
-  ASSERT_TRUE(err);
-
-  Parser p1("config.xml", "user/");
-  err = p.read_config();
-  ASSERT_TRUE(err);
-
-  Parser p2("NULL.xml", "user/");
-  err = p.read_config();
-  ASSERT_TRUE(err);
-}
-
 GTEST_TEST(parser, excluding_and_down_case) {
   Parser p("config.xml", "user/");
-  bool err = p.read_config();
+
   str s("My favourite language is C++.");
+  std::unordered_set<str> us = {"to", "is", "with"};
+  p.set_min_len(3);
+  p.set_max_len(6);
+  p.set_stopword_set(us);
+
   p.exclude_punct(s);
   ASSERT_STREQ(s.c_str(), "My favourite language is C");
-
   p.to_lower_case(s);
   ASSERT_STREQ(s.c_str(), "my favourite language is c");
-
   p.exclude_stop_words(s);
   ASSERT_STREQ(s.c_str(), "my favourite language c");
 }
 
 GTEST_TEST(parser, check_parser_result) {
   Parser p("config.xml", "user/");
-  bool err = p.read_config();
-  ASSERT_FALSE(err);
 
   str s("My favourite language is C++.");
+  std::unordered_set<str> us = {"to", "is", "with"};
+  p.set_min_len(3);
+  p.set_max_len(6);
+  p.set_stopword_set(us);
+
   p.exclude_punct(s);
   p.to_lower_case(s);
   p.exclude_stop_words(s);

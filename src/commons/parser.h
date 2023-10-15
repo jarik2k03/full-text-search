@@ -31,6 +31,15 @@ class Parser {
   void exclude_stop_words(str& raw_str);
   void to_lower_case(str& raw_str);
 
+  void set_min_len(uint _min) {
+    min = _min;
+  }
+  void set_max_len(uint _max) {
+    max = _max;
+  }
+  void set_stopword_set(std::unordered_set<str>& _set) {
+    stopwords = std::move(_set);
+  }
   uint get_min_len() {
     return min;
   }
