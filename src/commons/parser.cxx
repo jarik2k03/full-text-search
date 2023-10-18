@@ -39,7 +39,7 @@ ParserResult Parser::parse(str& raw_str) {
   exclude_punct(raw_str);
   to_lower_case(raw_str);
   exclude_stop_words(raw_str);
-  
+
   ParserResult pr(0);
   std::stringstream ss(raw_str);
   str s;

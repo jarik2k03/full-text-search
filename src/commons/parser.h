@@ -27,10 +27,9 @@ class Parser {
   void exclude_punct(str& raw_str);
   void exclude_stop_words(str& raw_str);
   void to_lower_case(str& raw_str);
+
  public:
   Parser(cstr& name, cstr& path);
-
-
 
   void set_min_len(uint _min) {
     min = _min;
