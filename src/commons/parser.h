@@ -24,12 +24,13 @@ class Parser {
   str path_to_config;
   std::unordered_set<str> stopwords;
 
- public:
-  Parser(cstr& name, cstr& path);
-
   void exclude_punct(str& raw_str);
   void exclude_stop_words(str& raw_str);
   void to_lower_case(str& raw_str);
+ public:
+  Parser(cstr& name, cstr& path);
+
+
 
   void set_min_len(uint _min) {
     min = _min;
@@ -49,5 +50,5 @@ class Parser {
 
   bool read_config();
   void print_config();
-  ParserResult parse(cstr& raw_str);
+  ParserResult parse(str& raw_str);
 };

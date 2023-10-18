@@ -35,9 +35,6 @@ int main(int argc, char** argv) {
     if (pr.count("request")) {
       std::string raw = pr["request"].as<std::string>();
 
-      user.exclude_punct(raw);
-      user.to_lower_case(raw);
-      user.exclude_stop_words(raw);
       ParserResult user_parsed = user.parse(raw);
       user_parsed.ngrams_traverse();
     }

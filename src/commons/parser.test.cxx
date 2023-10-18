@@ -10,11 +10,8 @@ GTEST_TEST(parser, excluding_and_down_case) {
   p.set_max_len(6);
   p.set_stopword_set(us);
 
-  p.exclude_punct(s);
-  ASSERT_STREQ(s.c_str(), "My favourite language is C");
-  p.to_lower_case(s);
-  ASSERT_STREQ(s.c_str(), "my favourite language is c");
-  p.exclude_stop_words(s);
+  ParserResult pr(0);
+  pr = p.parse(s);
   ASSERT_STREQ(s.c_str(), "my favourite language c");
 }
 
@@ -26,11 +23,6 @@ GTEST_TEST(parser, check_parser_result) {
   p.set_min_len(3);
   p.set_max_len(6);
   p.set_stopword_set(us);
-
-  p.exclude_punct(s);
-  p.to_lower_case(s);
-  p.exclude_stop_words(s);
-
   ParserResult pr(0);
   pr = p.parse(s);
   ASSERT_EQ(pr.positions_count, 2);
