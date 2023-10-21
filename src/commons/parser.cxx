@@ -89,5 +89,6 @@ void Parser::to_lower_case(str& raw_str) const {
 
 void ParserResult::ngrams_traverse() const {
   for (const auto& [str, c] : ngrams)
-    std::cout << "NGRAM: " << str << "\tPOSITION: " << static_cast<uint8_t>(c) << "\n";
+    std::cout << "NGRAM: " << str << "\tPOSITION: " << static_cast<uint8_t>(c)
+              << "\n";
 }

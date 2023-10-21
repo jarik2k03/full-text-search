@@ -1,12 +1,12 @@
 #pragma once
 #include <pugixml.hpp>
 
+#include <inttypes.h>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
-#include <inttypes.h>
 
 #include <commons/abstractions.h>
 
