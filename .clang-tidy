@@ -64,7 +64,7 @@ CheckOptions:
     value:           'false'
   - key:             bugprone-easily-swappable-parameters.QualifiersMix
     value:           'false'
-  - key:             cert-err09-cpp.WarnOnLargeObjects
+  - key:             cert-err09-cpp.WarnOnLargeObject
     value:           'false'
   - key:             bugprone-suspicious-string-compare.WarnOnImplicitComparison
     value:           'true'
@@ -92,8 +92,6 @@ CheckOptions:
     value:           '"";iterator;Iterator;begin;Begin;end;End;first;First;last;Last;lhs;LHS;rhs;RHS'
   - key:             modernize-loop-convert.UseCxx20ReverseRanges
     value:           'true'
-  - key:             cppcoreguidelines-prefer-member-initializer.UseAssignment
-    value:           'false'
   - key:             hicpp-function-size.VariableThreshold
     value:           '4294967295'
   - key:             cert-oop57-cpp.MemSetNames
@@ -234,8 +232,6 @@ CheckOptions:
     value:           'true'
   - key:             modernize-use-equals-delete.IgnoreMacros
     value:           'true'
-  - key:             objc-forbidden-subclassing.ForbiddenSuperClassNames
-    value:           'ABNewPersonViewController;ABPeoplePickerNavigationController;ABPersonViewController;ABUnknownPersonViewController;NSHashTable;NSMapTable;NSPointerArray;NSPointerFunctions;NSTimer;UIActionSheet;UIAlertView;UIImagePickerController;UITextInputMode;UIWebView'
   - key:             cppcoreguidelines-pro-bounds-constant-array-index.IncludeStyle
     value:           llvm
   - key:             readability-identifier-length.IgnoredVariableNames
@@ -398,7 +394,7 @@ CheckOptions:
     value:           'true'
   - key:             readability-identifier-naming.AggressiveDependentMemberLookup
     value:           'false'
-  - key:             cert-err61-cpp.WarnOnLargeObjects
+  - key:             cert-err61-cpp.WarnOnLargeObject
     value:           'false'
   - key:             readability-identifier-length.MinimumParameterNameLength
     value:           '3'
@@ -642,7 +638,7 @@ CheckOptions:
     value:           lit
   - key:             readability-suspicious-call-argument.Dice
     value:           'true'
-  - key:             misc-throw-by-value-catch-by-reference.WarnOnLargeObjects
+  - key:             misc-throw-by-value-catch-by-reference.WarnOnLargeObject
     value:           'false'
   - key:             readability-identifier-length.IgnoredLoopCounterNames
     value:           '^[ijk_]$'
