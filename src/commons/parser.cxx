@@ -47,10 +47,10 @@ ParserResult Parser::parse(str& raw_str) {
   ParserResult pr;
   std::stringstream ss(raw_str);
   str s;
-  int count = 0;
+  uint8_t count = 0;
 
   while (ss >> s) {
-    char size = s.size();
+    int size = s.size();
     for (int i = min; i <= size && i <= max; ++i) {
       str part_s(s, 0, i);
       pr.ngrams.insert({part_s, count});
@@ -89,5 +89,5 @@ void Parser::to_lower_case(str& raw_str) const {
 
 void ParserResult::ngrams_traverse() const {
   for (const auto& [str, c] : ngrams)
-    std::cout << "NGRAM: " << str << "\tPOSITION: " << (int)c << "\n";
+    std::cout << "NGRAM: " << str << "\tPOSITION: " << static_cast<uint8_t>(c) << "\n";
 }

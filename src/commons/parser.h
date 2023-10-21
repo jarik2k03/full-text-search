@@ -6,11 +6,12 @@
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
+#include <inttypes.h>
 
 #include <commons/abstractions.h>
 
 struct ParserResult {
-  std::unordered_map<str, u_int8_t> ngrams;
+  std::unordered_map<str, uint8_t> ngrams;
   uint positions_count;
   void ngrams_traverse() const;
   ParserResult() : positions_count(0) {
