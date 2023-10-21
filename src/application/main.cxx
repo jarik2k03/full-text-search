@@ -1,38 +1,42 @@
-#include <fsp/fsp.h>
 #include <cxxopts.hpp>
+#include <pugixml.hpp>
+
 #include <iostream>
-#include "macros.h"
+
+#include <commons/abstractions.h>
+#include <commons/parser.h>
 
 using namespace cxxopts;
 
-void print_manual();
+int print_manual();
 
 int main(int argc, char** argv) {
-  if (argc == 1) {
-    print_manual();
-    return 0;
-  }
+  if (argc == 1)
+    return print_manual();
 
   Options opt("FullTextSearch", "Okay, fts!");
-  opt.add_options()("first", "First num", value<double>())(
-      "second", "Second num", value<double>());
+  opt.add_options()(
+      "config",
+      "XML user settings",
+      value<str>()->implicit_value("config.xml"))(
+      "request",
+      "Raw search request",
+      value<str>()->implicit_value("Wikipedia"));
 
-  ParseResult pr = opt.parse(argc, argv);
-
-  if (pr.count("first") == 1 && pr.count("second") == 1) {
-    double n1 = pr["first"].as<double>();
-    double n2 = pr["second"].as<double>();
-    fsp_calculator calc;
-    double sum = calc.summ(n1, n2);
-    calc.print_value(sum);
+  const ParseResult pr = opt.parse(argc, argv);
+  if (pr.count("config")) {
+    Parser user(pr["config"].as<str>());
+    if (pr.count("request")) {
+      str raw = pr["request"].as<str>();
+      const ParserResult user_parsed = user.parse(raw);
+      user_parsed.ngrams_traverse();
+    }
   }
-
   return 0;
 }
 
-void print_manual() {
-  printf(
-      "Для измерения результата сумматора необходимо ввести: \n"
-      "\t- номер аргумента в виде слова (--first, --second) \n"
-      "\t- вещественное число \n");
+int print_manual() {
+  std::cout << "--config - пользовательские настройки (default:config.xml)\n"
+            << "--request - пользовательский запрос\n";
+  return 0;
 }
