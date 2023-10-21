@@ -1,8 +1,8 @@
 #pragma once
-#define ASSERT(error, msg)                           \
-  if (error == true) {                               \
-    std::cout << "Возникла ошибка: " << msg << '\n'; \
-    exit(-1);                                        \
+#define ASSERT(error, msg)                              \
+  if (error == true) {                                  \
+    std::cout << "Критическая ошибка: " << msg << '\n'; \
+    exit(-1);                                           \
   }
 
 #define PEXCHANGE(from, to) to = std::exchange(from, nullptr);
@@ -12,3 +12,4 @@
 using uint = unsigned int;
 using cstr = const std::string;
 using str = std::string;
+using str_uset = std::unordered_set<str>;

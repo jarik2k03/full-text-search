@@ -10,44 +10,43 @@
 #include <commons/abstractions.h>
 
 struct ParserResult {
-  std::unordered_map<str, char> ngrams;
+  std::unordered_map<str, u_int8_t> ngrams;
   uint positions_count;
-  void ngrams_traverse();
-  ParserResult(uint count) : positions_count(count) {
+  void ngrams_traverse() const;
+  ParserResult() : positions_count(0) {
   }
 };
 
 class Parser {
  private:
   uint min, max; // ngram length
-  str config_name;
   str path_to_config;
-  std::unordered_set<str> stopwords;
+  str_uset stopwords;
 
-  void exclude_punct(str& raw_str);
-  void exclude_stop_words(str& raw_str);
-  void to_lower_case(str& raw_str);
+  void exclude_punct(str& raw_str) const;
+  void exclude_stop_words(str& raw_str) const;
+  void to_lower_case(str& raw_str) const;
 
  public:
-  Parser(cstr& name, cstr& path);
-
+  Parser(cstr& name, cstr& path = "user/");
+  Parser(str_uset& _set, uint _min = 3, uint _max = 6);
   void set_min_len(uint _min) {
     min = _min;
   }
   void set_max_len(uint _max) {
     max = _max;
   }
-  void set_stopword_set(std::unordered_set<str>& _set) {
+  void set_stopword_set(str_uset& _set) {
     stopwords = std::move(_set);
   }
-  uint get_min_len() {
+  uint get_min_len() const {
     return min;
   }
-  uint get_max_len() {
+  uint get_max_len() const {
     return max;
   }
 
-  bool read_config();
-  void print_config();
+  bool read_config(cstr& name);
+  void print_config() const;
   ParserResult parse(str& raw_str);
 };

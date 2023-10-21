@@ -1,13 +1,17 @@
 #include "parser.h"
 
-Parser::Parser(cstr& name, cstr& path)
-    : config_name(name), path_to_config(path) {
+Parser::Parser(cstr& name, cstr& path) : path_to_config(path) {
+  ASSERT(read_config(name), "Не удалось найти конфиг");
 }
 
-bool Parser::read_config() {
-  if (config_name.empty() || path_to_config.empty())
+Parser::Parser(str_uset& _set, uint _min, uint _max)
+    : stopwords(_set), min(_min), max(_max) {
+}
+
+bool Parser::read_config(cstr& name) {
+  if (path_to_config.empty())
     return true;
-  str docpath = path_to_config + config_name;
+  str docpath = path_to_config + name;
   pugi::xml_document doc;
   pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
   if (!parsed)
@@ -27,9 +31,9 @@ bool Parser::read_config() {
   return false;
 }
 
-void Parser::print_config() {
+void Parser::print_config() const {
   std::cout << "Ngram min: " << min << "\nNgram max: " << max
-            << "\nConfig: " << path_to_config << config_name << "\n";
+            << "\nConfig: " << path_to_config << "\n";
   for (str it : stopwords)
     std::cout << it << "\t";
   std::cout << "\n";
@@ -40,7 +44,7 @@ ParserResult Parser::parse(str& raw_str) {
   to_lower_case(raw_str);
   exclude_stop_words(raw_str);
 
-  ParserResult pr(0);
+  ParserResult pr;
   std::stringstream ss(raw_str);
   str s;
   int count = 0;
@@ -59,12 +63,12 @@ ParserResult Parser::parse(str& raw_str) {
   return pr;
 }
 
-void Parser::exclude_punct(str& raw_str) {
+void Parser::exclude_punct(str& raw_str) const {
   auto it = std::remove_if(raw_str.begin(), raw_str.end(), ::ispunct);
   raw_str.erase(it, raw_str.end());
 }
 
-void Parser::exclude_stop_words(str& raw_str) {
+void Parser::exclude_stop_words(str& raw_str) const {
   std::stringstream ss(raw_str);
   str current;
   uint index = 0;
@@ -79,11 +83,11 @@ void Parser::exclude_stop_words(str& raw_str) {
   }
 }
 
-void Parser::to_lower_case(str& raw_str) {
+void Parser::to_lower_case(str& raw_str) const {
   std::transform(raw_str.cbegin(), raw_str.cend(), raw_str.begin(), ::tolower);
 }
 
-void ParserResult::ngrams_traverse() {
+void ParserResult::ngrams_traverse() const {
   for (const auto& [str, c] : ngrams)
     std::cout << "NGRAM: " << str << "\tPOSITION: " << (int)c << "\n";
 }

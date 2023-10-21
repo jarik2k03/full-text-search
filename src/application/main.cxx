@@ -8,33 +8,26 @@
 
 using namespace cxxopts;
 
-void print_manual();
+int print_manual();
 
 int main(int argc, char** argv) {
-  if (argc == 1) {
-    print_manual();
-    return 0;
-  }
-  bool r;
+  if (argc == 1)
+    return print_manual();
 
   Options opt("FullTextSearch", "Okay, fts!");
   opt.add_options()(
       "config",
       "XML user settings",
-      value<std::string>()->implicit_value("config.xml"))(
+      value<str>()->implicit_value("config.xml"))(
       "request",
       "Raw search request",
-      value<std::string>()->implicit_value("Wikipedia"));
+      value<str>()->implicit_value("Wikipedia"));
 
   ParseResult pr = opt.parse(argc, argv);
-
   if (pr.count("config")) {
-    Parser user(pr["config"].as<std::string>(), "user/");
-    r = user.read_config();
-    ASSERT(r, "Не удалось найти конфиг");
+    Parser user(pr["config"].as<str>());
     if (pr.count("request")) {
-      std::string raw = pr["request"].as<std::string>();
-
+      str raw = pr["request"].as<str>();
       ParserResult user_parsed = user.parse(raw);
       user_parsed.ngrams_traverse();
     }
@@ -42,7 +35,8 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void print_manual() {
+int print_manual() {
   std::cout << "--config - пользовательские настройки (default:config.xml)\n"
             << "--request - пользовательский запрос\n";
+  return 0;
 }
