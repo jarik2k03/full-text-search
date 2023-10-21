@@ -39,7 +39,7 @@ void Parser::print_config() const {
   std::cout << "\n";
 }
 
-ParserResult Parser::parse(str raw_str) {
+ParserResult Parser::parse(str& raw_str) {
   exclude_punct(raw_str);
   to_lower_case(raw_str);
   exclude_stop_words(raw_str);
@@ -89,6 +89,6 @@ void Parser::to_lower_case(str& raw_str) const {
 
 void ParserResult::ngrams_traverse() const {
   for (const auto& [str, c] : ngrams)
-    std::cout << "NGRAM: " << str << "\tPOSITION: " << static_cast<uint8_t>(c)
+    std::cout << "NGRAM: " << str << "\tPOSITION: " << static_cast<int>(c)
               << "\n";
 }

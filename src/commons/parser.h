@@ -49,5 +49,5 @@ class Parser {
 
   bool read_config(cstr& name);
   void print_config() const;
-  ParserResult parse(str raw_str);
+  ParserResult parse(str& raw_str);
 };

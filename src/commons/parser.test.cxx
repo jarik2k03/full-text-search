@@ -13,6 +13,7 @@ GTEST_TEST(parser, check_parser_result) {
   str s("My favourite language is C++.");
   const std::unordered_set<str> us = {"to", "is", "with"};
   Parser p(us);
+  p.print_config();
   const ParserResult pr = p.parse(s);
   ASSERT_EQ(pr.positions_count, 2);
   std::unordered_map<str, char> um;
