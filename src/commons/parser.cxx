@@ -4,24 +4,24 @@ Parser::Parser(cstr& name, cstr& path) : path_to_config(path) {
   ASSERT(read_config(name), "Не удалось найти конфиг");
 }
 
-Parser::Parser(str_uset& _set, uint _min, uint _max)
+Parser::Parser(const str_uset& _set, uint _min, uint _max)
     : stopwords(_set), min(_min), max(_max) {
 }
 
 bool Parser::read_config(cstr& name) {
   if (path_to_config.empty())
     return true;
-  str docpath = path_to_config + name;
+  cstr docpath = path_to_config + name;
   pugi::xml_document doc;
-  pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
+  const pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
   if (!parsed)
     return true;
 
-  pugi::xml_node ngram = doc.child("fts").child("ngram");
+  const pugi::xml_node ngram = doc.child("fts").child("ngram");
   min = ngram.attribute("min").as_uint();
   max = ngram.attribute("max").as_uint();
 
-  pugi::xml_node stop_words =
+  const pugi::xml_node stop_words =
       doc.child("fts").child("ngram").child("stop_words");
 
   for (pugi::xml_node i : stop_words.children("word")) {
@@ -39,7 +39,7 @@ void Parser::print_config() const {
   std::cout << "\n";
 }
 
-ParserResult Parser::parse(str& raw_str) {
+ParserResult Parser::parse(str raw_str) {
   exclude_punct(raw_str);
   to_lower_case(raw_str);
   exclude_stop_words(raw_str);
@@ -64,7 +64,7 @@ ParserResult Parser::parse(str& raw_str) {
 }
 
 void Parser::exclude_punct(str& raw_str) const {
-  auto it = std::remove_if(raw_str.begin(), raw_str.end(), ::ispunct);
+  const auto it = std::remove_if(raw_str.begin(), raw_str.end(), ::ispunct);
   raw_str.erase(it, raw_str.end());
 }
 

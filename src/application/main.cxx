@@ -23,12 +23,12 @@ int main(int argc, char** argv) {
       "Raw search request",
       value<str>()->implicit_value("Wikipedia"));
 
-  ParseResult pr = opt.parse(argc, argv);
+  const ParseResult pr = opt.parse(argc, argv);
   if (pr.count("config")) {
     Parser user(pr["config"].as<str>());
     if (pr.count("request")) {
       str raw = pr["request"].as<str>();
-      ParserResult user_parsed = user.parse(raw);
+      const ParserResult user_parsed = user.parse(raw);
       user_parsed.ngrams_traverse();
     }
   }

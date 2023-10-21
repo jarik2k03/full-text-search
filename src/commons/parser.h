@@ -30,7 +30,7 @@ class Parser {
 
  public:
   Parser(cstr& name, cstr& path = "user/");
-  Parser(str_uset& _set, uint _min = 3, uint _max = 6);
+  Parser(const str_uset& _set, uint _min = 3, uint _max = 6);
   void set_min_len(uint _min) {
     min = _min;
   }
@@ -49,5 +49,5 @@ class Parser {
 
   bool read_config(cstr& name);
   void print_config() const;
-  ParserResult parse(str& raw_str);
+  ParserResult parse(str raw_str);
 };
