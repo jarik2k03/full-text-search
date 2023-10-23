@@ -5,6 +5,7 @@
 
 #include <commons/abstractions.h>
 #include <commons/parser.h>
+#include <ft-indexer/indexer.h>
 
 using namespace cxxopts;
 
@@ -25,12 +26,15 @@ int main(int argc, char** argv) {
 
   const ParseResult pr = opt.parse(argc, argv);
   if (pr.count("config")) {
-    Parser user(pr["config"].as<str>());
-    if (pr.count("request")) {
+    if (pr.count("request")) { 
       str raw = pr["request"].as<str>();
-      const ParserResult user_parsed = user.parse(raw);
-      user_parsed.ngrams_traverse();
+      cstr config_name = pr["config"].as<str>();
+      IndexBuilder index(config_name);
+      index.add_document(396087, raw);
+      index.add_document(22305, "Zyravek kryor!");
+      index.print_results();
     }
+
   }
   return 0;
 }

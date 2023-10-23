@@ -1,20 +1,21 @@
-add_executable(application)
+add_executable(ft-searcher)
 
 add_compile_options(
-    application
+    ft-searcher
     -Wall -Wextra -Werror -pedantic
 )
 
 target_sources(
-    application
+    ft-searcher
     PRIVATE
         main.cxx
 )
 
 # Link libraries
 target_link_libraries(
-    application
+    ft-searcher
     PRIVATE
+        indexer
         parser
         cxxopts
         pugixml
