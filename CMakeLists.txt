@@ -18,6 +18,13 @@ else()
   message("clang-tidy found:\n" ${CLANG_TIDY_VERSION})
 endif()
 
+# find_program(CLANG_FORMAT_EXE NAMES clang-format)
+# if (NOT CLANG_FORMAT_EXE)
+#   message(WARNING "clang-format is not installed")
+# else()
+#   execute_process(COMMAND find src/ -iname *.h -o -iname *.cxx | xargs ${CLANG_FORMAT_EXE} -i) 
+#   message("formatting code...")
+# endif()
 
 add_subdirectory(external)
 enable_testing()

@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
   const ParseResult pr = opt.parse(argc, argv);
   if (pr.count("config")) {
-    if (pr.count("request")) { 
+    if (pr.count("request")) {
       str raw = pr["request"].as<str>();
       cstr config_name = pr["config"].as<str>();
       IndexBuilder index(config_name);
@@ -34,7 +34,6 @@ int main(int argc, char** argv) {
       index.add_document(22305, "Zyravek kryor!");
       index.print_results();
     }
-
   }
   return 0;
 }
