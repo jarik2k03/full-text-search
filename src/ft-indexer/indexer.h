@@ -1,5 +1,5 @@
 #include <commons/parser.h>
-#include <iostream>
+#include <fstream>
 
 #include <vector>
 
@@ -14,11 +14,12 @@ class IndexBuilder {
  private:
   Parser p;
   ngrams_vec save_parsed;
+  std::ifstream books;
 
  public:
   IndexBuilder();
-  IndexBuilder(cstr& config_name, cstr& path = "user/");
-  bool add_document(int doc_id, str text);
+  IndexBuilder(cstr& books_name, cstr& config_name, cstr& path = "user/");
+  bool add_document(const int doc_id, str& text);
 
   void print_results() const;
 };

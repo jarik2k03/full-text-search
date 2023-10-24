@@ -20,18 +20,16 @@ int main(int argc, char** argv) {
       "config",
       "XML user settings",
       value<str>()->implicit_value("config.xml"))(
-      "request",
+      "book",
       "Raw search request",
-      value<str>()->implicit_value("Wikipedia"));
+      value<str>()->implicit_value("book.csv"));
 
   const ParseResult pr = opt.parse(argc, argv);
   if (pr.count("config")) {
-    if (pr.count("request")) {
-      str raw = pr["request"].as<str>();
+    if (pr.count("book")) {
+      str raw = pr["book"].as<str>();
       cstr config_name = pr["config"].as<str>();
-      IndexBuilder index(config_name);
-      index.add_document(396087, raw);
-      index.add_document(22305, "Zyravek kryor!");
+      IndexBuilder index(raw, config_name);
       index.print_results();
     }
   }
@@ -40,6 +38,6 @@ int main(int argc, char** argv) {
 
 int print_manual() {
   std::cout << "--config - пользовательские настройки (default:config.xml)\n"
-            << "--request - пользовательский запрос\n";
+            << "--book - проиндексировать базу книг\n";
   return 0;
 }
