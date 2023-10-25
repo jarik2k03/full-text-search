@@ -40,6 +40,9 @@ class Parser {
   void set_stopword_set(str_uset& _set) {
     stopwords = std::move(_set);
   }
+  str get_binded_path() const {
+    return path_to_config;
+  }
   uint get_min_len() const {
     return min;
   }

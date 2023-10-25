@@ -12,8 +12,9 @@ target_include_directories(
 
 target_link_libraries(
     indexer
-    PUBLIC
+    PRIVATE
     pugixml
+    picosha2
 
 )
 

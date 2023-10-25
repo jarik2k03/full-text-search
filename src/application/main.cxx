@@ -1,10 +1,8 @@
 #include <cxxopts.hpp>
-#include <pugixml.hpp>
 
 #include <iostream>
 
 #include <commons/abstractions.h>
-#include <commons/parser.h>
 #include <ft-indexer/indexer.h>
 
 using namespace cxxopts;
@@ -21,15 +19,16 @@ int main(int argc, char** argv) {
       "XML user settings",
       value<str>()->implicit_value("config.xml"))(
       "book",
-      "Raw search request",
+      "Books database .csv name",
       value<str>()->implicit_value("book.csv"));
 
   const ParseResult pr = opt.parse(argc, argv);
   if (pr.count("config")) {
     if (pr.count("book")) {
-      str raw = pr["book"].as<str>();
+      str book_name = pr["book"].as<str>();
       cstr config_name = pr["config"].as<str>();
-      IndexBuilder index(raw, config_name);
+      IndexBuilder index(book_name, config_name);
+      // index.create_index();
       index.print_results();
     }
   }

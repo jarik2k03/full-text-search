@@ -1,6 +1,9 @@
+#pragma once
 #include <commons/parser.h>
-#include <fstream>
 
+// #include <picosha.h>
+
+#include <fstream>
 #include <vector>
 
 using ngrams_vec = std::vector<std::pair<ParserResult, int>>;
@@ -14,13 +17,14 @@ class IndexBuilder {
  private:
   Parser p;
   ngrams_vec save_parsed;
-  std::ifstream books;
+  bool add_document(const int doc_id, str& text);
+  void fill_docs(cstr& docpath, cstr& id, cstr& line) const;
 
  public:
   IndexBuilder();
   IndexBuilder(cstr& books_name, cstr& config_name, cstr& path = "user/");
-  bool add_document(const int doc_id, str& text);
 
+  bool create_index(cstr& path = "indexed/");
   void print_results() const;
 };
 
