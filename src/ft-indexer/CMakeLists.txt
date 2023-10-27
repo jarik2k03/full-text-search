@@ -14,6 +14,7 @@ target_link_libraries(
     indexer
     PRIVATE
     pugixml
+    PUBLIC
     picosha2
 
 )

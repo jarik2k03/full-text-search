@@ -9,6 +9,8 @@
 
 #define EXCHANGE(from, to) to = std::exchange(from, 0);
 
+using std::begin;
+using std::end;
 using uint = unsigned int;
 using cstr = const std::string;
 using str = std::string;

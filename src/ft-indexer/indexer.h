@@ -1,7 +1,7 @@
 #pragma once
 #include <commons/parser.h>
 
-// #include <picosha.h>
+#include <picosha2.h>
 
 #include <fstream>
 #include <vector>
@@ -11,6 +11,8 @@ using ngrams_vec = std::vector<std::pair<ParserResult, int>>;
 class IndexWriter {
  public:
   virtual void write(cstr& path) = 0;
+  virtual void fill_docs(cstr& books_name, cstr& path = "user/") const = 0;
+  virtual void fill_entries(ngrams_vec& parsed, cstr& path = "user/") const = 0;
 };
 
 class IndexBuilder {
@@ -18,13 +20,15 @@ class IndexBuilder {
   Parser p;
   ngrams_vec save_parsed;
   bool add_document(const int doc_id, str& text);
-  void fill_docs(cstr& docpath, cstr& id, cstr& line) const;
 
  public:
   IndexBuilder();
   IndexBuilder(cstr& books_name, cstr& config_name, cstr& path = "user/");
 
-  bool create_index(cstr& path = "indexed/");
+  ngrams_vec& get_save_parsed() {
+    return save_parsed;
+  }
+
   void print_results() const;
 };
 
@@ -33,5 +37,9 @@ class TextIndexWriter : public IndexWriter {
   int a, b;
 
  public:
-  void write(cstr& path);
+  void write(cstr& path) override;
+  void fill_docs(cstr& books_name, cstr& path = "user/") const override;
+  void fill_entries(ngrams_vec& parsed, cstr& path = "user/") const override;
 };
+
+void create_folder(cstr& name);

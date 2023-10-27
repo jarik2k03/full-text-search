@@ -10,26 +10,12 @@ IndexBuilder::IndexBuilder(cstr& books_name, cstr& config_name, cstr& path)
   str line;
   std::cout << path + books_name << "\n";
 
-  cstr fullpath = path + "indexed/";
-  cstr command = "mkdir -p " + fullpath;
-  cstr docpath = fullpath + "/docs/";
-  std::system((command + docpath).c_str());
-
   while (std::getline(books, line)) {
-    const auto delim = line.find_first_of(',');
-    cstr s_id(line, 0, delim);
-    const int id = std::stoi(s_id);
-    line.erase(0, delim + 1);
-    add_document(id, line);
-    fill_docs(docpath, s_id, line);
+    const std::size_t delim = line.find_first_of(',');
+    const int id = std::stoi(cstr(line, 0, delim));
+    add_document(id, line.erase(0, delim + 1));
   }
   books.close();
-}
-
-void IndexBuilder::fill_docs(cstr& docpath, cstr& id, cstr& line) const {
-  std::ofstream doc(docpath + id);
-  doc << line;
-  doc.close();
 }
 
 void IndexBuilder::print_results() const {
@@ -46,15 +32,39 @@ bool IndexBuilder::add_document(const int doc_id, str& text) {
   return false;
 }
 
-bool IndexBuilder::create_index(cstr& path) {
-  cstr fullpath = p.get_binded_path() + path;
-  str command = "mkdir -p " + fullpath;
-  cstr entrypath = fullpath + "/entries/";
-  std::system((command + entrypath).c_str());
-
-  return false;
-}
-
 void TextIndexWriter::write(cstr& path) {
   // std::cout << path << "\n";
+}
+
+void TextIndexWriter::fill_docs(cstr& books_name, cstr& path) const {
+  std::ifstream books(path + books_name);
+  ASSERT(!books, "Не найдена база книг для индексации!");
+  cstr docpath = path + "indexed/docs/";
+  create_folder(docpath);
+  str line;
+  while (std::getline(books, line)) {
+    std::size_t delim = line.find_first_of(',');
+    std::ofstream doc(docpath + cstr(line, 0, delim));
+    doc << line;
+    doc.close();
+  }
+  books.close();
+}
+
+void TextIndexWriter::fill_entries(ngrams_vec& parses, cstr& path) const {
+  cstr entrypath = path + "indexed/entries/";
+  create_folder(entrypath);
+  for (const auto& [pr, id] : parses) {
+    for (const auto& [key, pos] : pr.ngrams) {
+      cstr sha256key = picosha2::hash256_hex_string(key);
+      std::ofstream entryfile(entrypath + cstr(sha256key, 0, 6));
+      entryfile << key;
+      entryfile.close();
+    }
+  }
+}
+
+void create_folder(cstr& fullpath) {
+  str command = "mkdir -p " + fullpath;
+  std::system(command.c_str());
 }

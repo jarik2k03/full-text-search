@@ -27,9 +27,11 @@ int main(int argc, char** argv) {
     if (pr.count("book")) {
       str book_name = pr["book"].as<str>();
       cstr config_name = pr["config"].as<str>();
-      IndexBuilder index(book_name, config_name);
-      // index.create_index();
-      index.print_results();
+      IndexBuilder builder(book_name, config_name);
+      IndexWriter* writer = new TextIndexWriter();
+      writer->fill_docs(book_name);
+      writer->fill_entries(builder.get_save_parsed());
+      builder.print_results();
     }
   }
   return 0;
