@@ -39,4 +39,18 @@
         <word>with</word>
       </stop_words>
    </ngram>
+   <indexer>
+      <field >bookID</field>
+      <field>title</field>
+      <field ignore="true">authors</field>
+      <field ignore="true">average_rating</field>
+      <field ignore="true">isbn</field>
+      <field ignore="true">isbn13</field>
+      <field ignore="true">language_code</field>
+      <field ignore="true">num_pages</field>
+      <field ignore="true">ratings_count</field>
+      <field ignore="true">text_reviews_count</field>
+      <field ignore="true">publication_date</field>
+      <field ignore="true">publisher</field>
+   </indexer>
 </fts>

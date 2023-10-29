@@ -21,7 +21,6 @@ struct ParserResult {
 class Parser {
  private:
   uint min, max; // ngram length
-  str path_to_config;
   str_uset stopwords;
 
   void exclude_punct(str& raw_str) const;
@@ -29,8 +28,9 @@ class Parser {
   void to_lower_case(str& raw_str) const;
 
  public:
-  Parser(cstr& name, cstr& path = "user/");
+  Parser(cstr& name);
   Parser(const str_uset& _set, uint _min = 3, uint _max = 6);
+
   void set_min_len(uint _min) {
     min = _min;
   }
@@ -40,16 +40,12 @@ class Parser {
   void set_stopword_set(str_uset& _set) {
     stopwords = std::move(_set);
   }
-  str get_binded_path() const {
-    return path_to_config;
-  }
   uint get_min_len() const {
     return min;
   }
   uint get_max_len() const {
     return max;
   }
-
   bool read_config(cstr& name);
   void print_config() const;
   ParserResult parse(str& raw_str);

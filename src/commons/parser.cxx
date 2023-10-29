@@ -1,6 +1,6 @@
 #include "parser.h"
 
-Parser::Parser(cstr& name, cstr& path) : path_to_config(path) {
+Parser::Parser(cstr& name) {
   ASSERT(read_config(name), "Не удалось найти конфиг");
 }
 
@@ -9,9 +9,7 @@ Parser::Parser(const str_uset& _set, uint _min, uint _max)
 }
 
 bool Parser::read_config(cstr& name) {
-  if (path_to_config.empty())
-    return true;
-  cstr docpath = path_to_config + name;
+  cstr docpath = name;
   pugi::xml_document doc;
   const pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
   if (!parsed)
@@ -32,8 +30,7 @@ bool Parser::read_config(cstr& name) {
 }
 
 void Parser::print_config() const {
-  std::cout << "Ngram min: " << min << "\nNgram max: " << max
-            << "\nConfig: " << path_to_config << "\n";
+  std::cout << "Ngram min: " << min << "\nNgram max: " << max;
   for (str it : stopwords)
     std::cout << it << "\t";
   std::cout << "\n";

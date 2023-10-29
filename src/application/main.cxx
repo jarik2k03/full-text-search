@@ -17,10 +17,10 @@ int main(int argc, char** argv) {
   opt.add_options()(
       "config",
       "XML user settings",
-      value<str>()->implicit_value("config.xml"))(
+      value<str>()->implicit_value("user/config.xml"))(
       "book",
       "Books database .csv name",
-      value<str>()->implicit_value("book.csv"));
+      value<str>()->implicit_value("user/book.csv"));
 
   const ParseResult pr = opt.parse(argc, argv);
   if (pr.count("config")) {
@@ -28,10 +28,12 @@ int main(int argc, char** argv) {
       str book_name = pr["book"].as<str>();
       cstr config_name = pr["config"].as<str>();
       IndexBuilder builder(book_name, config_name);
+      builder.print_index_properties();
+      builder.print_documents();
       IndexWriter* writer = new TextIndexWriter();
-      writer->fill_docs(book_name);
+      // writer->fill_docs(book_name);
       writer->fill_entries(builder.get_save_parsed());
-      builder.print_results();
+      // builder.print_results();
     }
   }
   return 0;

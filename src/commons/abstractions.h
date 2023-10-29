@@ -1,7 +1,7 @@
 #pragma once
 #define ASSERT(error, msg)                              \
   if (error == true) {                                  \
-    std::cout << "Критическая ошибка: " << msg << '\n'; \
+    std::cerr << "Критическая ошибка: " << msg << '\n'; \
     exit(-1);                                           \
   }
 
