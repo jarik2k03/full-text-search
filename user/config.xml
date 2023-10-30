@@ -39,8 +39,8 @@
         <word>with</word>
       </stop_words>
    </ngram>
-   <indexer>
-      <field >bookID</field>
+   <indexer part_length="2" hash_length="6">
+      <field>bookID</field>
       <field>title</field>
       <field ignore="true">authors</field>
       <field ignore="true">average_rating</field>
