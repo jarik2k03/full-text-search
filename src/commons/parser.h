@@ -11,7 +11,7 @@
 #include <commons/abstractions.h>
 
 struct ParserResult {
-  std::unordered_map<str, uint8_t> ngrams;
+  std::unordered_multimap<str, uint8_t> ngrams;
   uint positions_count;
   void ngrams_traverse() const;
   ParserResult() : positions_count(0) {

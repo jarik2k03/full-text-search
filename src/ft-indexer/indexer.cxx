@@ -104,14 +104,19 @@ indexmap IndexBuilder::build_inverted_index() {
   int counter = 0;
   for (const auto& [id, data] : loaded_document) {
     ParserResult pr1 = data.parsed.back();
-    auto catched = pr1.ngrams.find(prince->first);
-    if (catched != pr1.ngrams.end()) {
-      std::cout << "CATCHED: " << catched->first
-                << " pos: " << (short)catched->second << " in docID: " << id
-                << '\n';
-    }
-    ++counter;
+    auto search = pr1.ngrams.equal_range(prince->first);
+    for_each(search.first, search.second, [](const auto& val) {
+      std::cout << "catched: " << val.first << " pos: " << (short)val.second
+                << '\t';
+      // arr_tokens.ntoken.emplace_back(val.second);
+    });
+
+    // std::cout << "CATCHED: " << catched->first
+    //           << " pos: " << (short)catched->second << " in docID: " << id
+    //           << '\n';
   }
+  ++counter;
+  // }
 
   return map;
 }
