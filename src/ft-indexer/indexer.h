@@ -3,6 +3,7 @@
 
 #include <picosha2.h>
 
+#include <time.h>
 #include <unistd.h>
 #include <chrono>
 #include <fstream>
@@ -10,22 +11,33 @@
 #include <vector>
 
 struct InvertedIndex_entries {
-  int doc_id;
+  str doc_id;
   int pos_count;
-  std::vector<int> ntoken;
-  InvertedIndex_entries() : doc_id(0), pos_count(0) {
+  std::vector<str> ntoken;
+  InvertedIndex_entries() : pos_count(0) {
   }
-  InvertedIndex_entries(int d, int p, std::vector<int>& tk)
+  InvertedIndex_entries(cstr& d, int p, std::vector<str>& tk)
       : doc_id(d), pos_count(p), ntoken(tk) {
+  }
+  void print_format() const {
+    std::cout << " " << doc_id << " " << pos_count;
+    for (auto i : ntoken)
+      std::cout << " " << i;
   }
 };
 struct InvertedIndex {
   int doc_count;
   std::vector<InvertedIndex_entries> entries;
+
   InvertedIndex() : doc_count(0) {
   }
   InvertedIndex(int d, std::vector<InvertedIndex_entries>& e)
       : doc_count(d), entries(e) {
+  }
+  void print_format() const {
+    std::cout << " " << doc_count;
+    for (auto i : entries)
+      i.print_format();
   }
 };
 
@@ -33,8 +45,8 @@ struct ParsedDocument {
   std::vector<str> tags;
   std::vector<ParserResult> parsed;
 };
-using docmap = std::map<str, ParsedDocument>;
-using indexmap = std::map<str, InvertedIndex>;
+using docmap = std::map<str, ParsedDocument>; // ключ - docID
+using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
 
 class IndexWriter {
  public:

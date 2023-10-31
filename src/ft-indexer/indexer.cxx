@@ -89,36 +89,34 @@ void IndexBuilder::print_documents() const {
 }
 
 indexmap IndexBuilder::build_inverted_index() {
-  indexmap map;
+  indexmap imap;
 
-  InvertedIndex index;
-  InvertedIndex_entries arr_tokens;
-  auto doc = loaded_document.find("1");
+  auto doc = loaded_document.find("1"); // TODO: first loop
   ParserResult pr = doc->second.parsed.back();
-  // pr.ngrams_traverse();
+  // for (const auto& [ngram, pos] : pr.ngrams) {} // TODO: second loop
 
-  // for (const auto& [ngram, pos] : pr.ngrams) {
-  //
-  // }
-  auto prince = pr.ngrams.begin();
-  int counter = 0;
+  // инициализация одного н-грамма
+  auto prince = pr.ngrams.begin()->first;
+  InvertedIndex index;
   for (const auto& [id, data] : loaded_document) {
-    ParserResult pr1 = data.parsed.back();
-    auto search = pr1.ngrams.equal_range(prince->first);
-    for_each(search.first, search.second, [](const auto& val) {
-      std::cout << "catched: " << val.first << " pos: " << (short)val.second
-                << '\t';
-      // arr_tokens.ntoken.emplace_back(val.second);
-    });
-
-    // std::cout << "CATCHED: " << catched->first
-    //           << " pos: " << (short)catched->second << " in docID: " << id
-    //           << '\n';
+    InvertedIndex_entries entr;
+    ParserResult titler = data.parsed.back();
+    auto node = titler.ngrams.find(prince);
+    if (node != titler.ngrams.end() && imap.find(prince) == imap.end()) {
+      auto range = loaded_document.equal_range(prince);
+      for (auto d = range.first; d != range.second; ++d) {
+        entr.ntoken.emplace_back(d->first);
+        entr.pos_count++;
+      }
+      entr.doc_id = id;
+      index.entries.emplace_back(entr);
+      index.doc_count++;
+    }
   }
-  ++counter;
-  // }
-
-  return map;
+  imap.insert({prince, index});
+  // std::cout << prince;
+  // index.print_format();
+  return imap;
 }
 
 bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
