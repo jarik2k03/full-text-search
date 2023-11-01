@@ -10,13 +10,13 @@
 #include <map>
 #include <vector>
 
-struct InvertedIndex_entries {
+struct InvertedIndex_ {
   str doc_id;
   int pos_count;
-  std::vector<str> ntoken;
-  InvertedIndex_entries() : pos_count(0) {
+  std::vector<int> ntoken;
+  InvertedIndex_() : pos_count(0) {
   }
-  InvertedIndex_entries(cstr& d, int p, std::vector<str>& tk)
+  InvertedIndex_(cstr& d, int p, std::vector<int>& tk)
       : doc_id(d), pos_count(p), ntoken(tk) {
   }
   void print_format() const {
@@ -27,11 +27,11 @@ struct InvertedIndex_entries {
 };
 struct InvertedIndex {
   int doc_count;
-  std::vector<InvertedIndex_entries> entries;
+  std::vector<InvertedIndex_> entries;
 
   InvertedIndex() : doc_count(0) {
   }
-  InvertedIndex(int d, std::vector<InvertedIndex_entries>& e)
+  InvertedIndex(int d, std::vector<InvertedIndex_>& e)
       : doc_count(d), entries(e) {
   }
   void print_format() const {
@@ -45,8 +45,22 @@ struct ParsedDocument {
   std::vector<str> tags;
   std::vector<ParserResult> parsed;
 };
+
+using prvector = std::vector<str, ParserResult>;
 using docmap = std::map<str, ParsedDocument>; // ключ - docID
 using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
+
+struct IndexerResult {
+  std::vector<indexmap> full_index;
+  void traverse() const {
+    for (auto &i : full_index) 
+      for (auto &idx : i) {
+        std::cout << idx.first << " ";
+        idx.second.print_format();
+      }
+        
+  };
+};
 
 class IndexWriter {
  public:
@@ -86,7 +100,8 @@ class IndexBuilder {
   IndexBuilder();
   IndexBuilder(cstr& books_name, cstr& config_name);
 
-  indexmap build_inverted_index();
+  void add_for_ngram(indexmap& imap, cstr& ngram, const int row) const;
+  IndexerResult build_inverted_index();
 
   int get_part_length() const {
     return part_length;

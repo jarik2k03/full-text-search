@@ -1,7 +1,7 @@
 #include <cxxopts.hpp>
 
 #include <iostream>
-
+#include <unistd.h>
 #include <commons/abstractions.h>
 #include <ft-indexer/indexer.h>
 
@@ -34,7 +34,10 @@ int main(int argc, char** argv) {
         cstr index_folder = pr["index"].as<str>();
 
         IndexBuilder b(book_name, config_name);
+        auto t1 = clock();
         b.build_inverted_index();
+        auto t2 = clock();
+        std::cout << "Time elapsed: " << (double)(t2 - t1) <<  '\n'; 
         // b.print_index_properties();
         // b.print_documents();
         if (pr.count("index")) {

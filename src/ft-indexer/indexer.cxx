@@ -80,7 +80,6 @@ void IndexBuilder::print_index_properties() const {
 
 void IndexBuilder::print_documents() const {
   for (const auto& [id, pd] : loaded_document) {
-    usleep(1000);
     std::cout << "\n[" << id << "] ~ ";
     for (const auto tag : pd.tags) {
       std::cout << tag << '\t';
@@ -88,35 +87,48 @@ void IndexBuilder::print_documents() const {
   }
 }
 
-indexmap IndexBuilder::build_inverted_index() {
+IndexerResult IndexBuilder::build_inverted_index() {
+  IndexerResult ir;
   indexmap imap;
+  for (const auto& [tag, p] : book_tags) {
+    if (p != -1)
+      ir.full_index.push_back(imap);
+  }
 
-  auto doc = loaded_document.find("1"); // TODO: first loop
-  ParserResult pr = doc->second.parsed.back();
-  // for (const auto& [ngram, pos] : pr.ngrams) {} // TODO: second loop
-
-  // инициализация одного н-грамма
-  auto prince = pr.ngrams.begin()->first;
-  InvertedIndex index;
-  for (const auto& [id, data] : loaded_document) {
-    InvertedIndex_entries entr;
-    ParserResult titler = data.parsed.back();
-    auto node = titler.ngrams.find(prince);
-    if (node != titler.ngrams.end() && imap.find(prince) == imap.end()) {
-      auto range = loaded_document.equal_range(prince);
-      for (auto d = range.first; d != range.second; ++d) {
-        entr.ntoken.emplace_back(d->first);
-        entr.pos_count++;
+  for (const auto& [id, doc] : loaded_document) {
+    // std::cout << "--------ROW------\n";
+    for (int pos = 0; pos < ir.full_index.size() - 1; ++pos) {
+      for (const auto ngram : doc.parsed.at(pos).ngrams) {
+        add_for_ngram(ir.full_index.at(pos), ngram.first, pos);
+        // ir.traverse();
       }
-      entr.doc_id = id;
-      index.entries.emplace_back(entr);
-      index.doc_count++;
     }
   }
-  imap.insert({prince, index});
-  // std::cout << prince;
-  // index.print_format();
-  return imap;
+  return ir;
+}
+
+void IndexBuilder::add_for_ngram(
+    indexmap& imap,
+    cstr& ngram,
+    const int row) const {
+  InvertedIndex indexed;
+  
+  for (const auto& [id, data] : loaded_document) {
+    auto& ng = data.parsed.at(row).ngrams;
+    InvertedIndex_ entr;
+    auto node = ng.find(ngram);
+    if (node != ng.end() && imap.find(ngram) == imap.end()) {
+      auto range = ng.equal_range(ngram);
+      for (auto d = range.first; d != range.second; ++d) { // ~ O(1)
+        entr.ntoken.emplace_back(d->second);
+        ++entr.pos_count;
+      }
+      entr.doc_id = id;
+      indexed.entries.emplace_back(entr);
+      ++indexed.doc_count;
+    }
+  }
+  imap.insert({ngram, indexed});
 }
 
 bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
