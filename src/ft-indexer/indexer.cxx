@@ -107,12 +107,10 @@ IndexerResult IndexBuilder::build_inverted_index() {
   return ir;
 }
 
-void IndexBuilder::add_for_ngram(
-    indexmap& imap,
-    cstr& ngram,
-    const int row) const {
+void IndexBuilder::add_for_ngram(indexmap& imap, cstr& ngram, const int row)
+    const {
   InvertedIndex indexed;
-  
+
   for (const auto& [id, data] : loaded_document) {
     auto& ng = data.parsed.at(row).ngrams;
     InvertedIndex_ entr;
@@ -139,16 +137,29 @@ bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
   return false;
 }
 
-void TextIndexWriter::write(
-    const docmap& csv,
-    cstr& path,
-    const int part_len,
-    const int hash_len) const {
-  ASSERT(csv.empty(), "БД книг не найдена. Невозможная запись!");
+TextIndexWriter::TextIndexWriter(
+    docmap& dm,
+    IndexerResult& ir,
+    std::vector<std::pair<str, short>>& bm,
+    const int p_l,
+    const int h_l)
+    : docindex(dm),
+      indexresult(ir),
+      book_tags(bm),
+      part_length(p_l),
+      hash_length(h_l) {
+}
+
+str TextIndexWriter::name_to_hash(cstr& name) const {
+  return picosha2::hash256_hex_string(name).substr(0, hash_length);
+}
+
+void TextIndexWriter::write(cstr& path) const {
+  ASSERT(docindex.empty(), "БД книг не найдена. Невозможна запись!");
   std::ofstream doc;
   cstr docpath = path + "/docs/";
   create_folder(docpath);
-  for (const auto& [id, data] : csv) {
+  for (const auto& [id, data] : (1, docindex)) {
     cstr namefile = docpath + id;
     doc.open(namefile + ".page", std::ios::out);
     for (const auto attr : data.tags) {
@@ -156,53 +167,42 @@ void TextIndexWriter::write(
     }
     doc.close();
   }
+  cstr entrpath = path + "/entries/";
 
-  // cstr entrypath = path + "/entries/";
-  // create_folder(entrypath);
-  // for (const auto& [id, data] : csv) {
-  //   cstr namefile = " ";
-  //   doc.open(namefile, std::ios::out);
-  //   for (const auto attr : data.tags) {
-  //     doc << attr << '\n';
-  //   }
-  //   doc.close();
-  // }
-}
-
-void TextIndexWriter::fill_docs(cstr& books_name) const {
-  std::ifstream books(books_name);
-  ASSERT(!books, "Не найдена база книг для индексации!");
-  cstr docpath = "user/indexed/docs/";
-  create_folder(docpath);
-  str line;
-  while (std::getline(books, line)) {
-    std::size_t delim = line.find_first_of(',');
-    std::ofstream doc(docpath + cstr(line, 0, delim));
-    doc << line;
-    doc.close();
+  create_folder(entrpath);
+  std::ofstream ngram_fileset;
+  str prev_part = "";
+  int attrpos = 0;
+  for (auto it = book_tags.begin() + 1; it != book_tags.end(); ++it) {
+    if (it->second == -1)
+      continue;
+    std::ostringstream attr_ngrams_path(entrpath);
+    attr_ngrams_path << entrpath << it->first << "/";
+    create_folder(attr_ngrams_path.str());
+    for (const auto& [idx, entr] : indexresult.full_index.at(attrpos++)) {
+      cstr part = name_to_hash(cstr(idx, 0, part_length));
+      if (part != prev_part) {
+        ngram_fileset.close();
+        ngram_fileset.open(attr_ngrams_path.str() + part, std::ios::out);
+      }
+      write_one(idx, entr, ngram_fileset);
+      prev_part = part;
+    }
   }
-  books.close();
 }
 
-// void TextIndexWriter::fill_entries(cstr& parses) const {
-//   cstr entrypath = "user/indexed/entries/";
-//   create_folder(entrypath);
-//   auto t1 = std::chrono::system_clock::now();
-
-//   std::ofstream entryfile(entrypath);
-//   for (const auto& [pr, id] : parses) {
-//     entryfile.close();
-//     cstr sha256key = picosha2::hash256_hex_string(std::to_string(id));
-//     entryfile.open(entrypath + cstr(sha256key, 0, 6));
-//     // std::cout << "Indexed " << counter << " documents.\n";
-//     for (const auto& [key, pos] : pr.ngrams) {
-//       entryfile << key << '\n';
-//     }
-//   }
-//   auto t2 = std::chrono::system_clock::now();
-//   std::chrono::duration<double> time = t2 - t1;
-//   std::cout << "-- " << time.count() << "s. \n";
-// }
+void TextIndexWriter::write_one(
+    cstr& ngram,
+    const InvertedIndex& cur,
+    std::ofstream& file) const {
+  file << ngram << " " << cur.doc_count << " ";
+  for (auto& idx : cur.entries) {
+    file << idx.doc_id << " " << idx.pos_count << " ";
+    for (auto i : idx.ntoken)
+      file << i << " ";
+  }
+  file << '\n';
+}
 
 void create_folder(cstr& fullpath) {
 #ifdef __linux

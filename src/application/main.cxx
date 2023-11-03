@@ -1,9 +1,9 @@
 #include <cxxopts.hpp>
 
-#include <iostream>
-#include <unistd.h>
 #include <commons/abstractions.h>
 #include <ft-indexer/indexer.h>
+#include <unistd.h>
+#include <iostream>
 
 using namespace cxxopts;
 
@@ -35,18 +35,22 @@ int main(int argc, char** argv) {
 
         IndexBuilder b(book_name, config_name);
         auto t1 = clock();
-        b.build_inverted_index();
+        IndexerResult ir = b.build_inverted_index();
         auto t2 = clock();
-        std::cout << "Time elapsed: " << (double)(t2 - t1) <<  '\n'; 
+        std::cout << "Time elapsed: " << (double)(t2 - t1) / 1e+6 << '\n';
         // b.print_index_properties();
         // b.print_documents();
         if (pr.count("index")) {
-          IndexWriter* writer = new TextIndexWriter();
-          // writer->write(
-          //     b.loaded_document,
-          //     index_folder,
-          //     b.get_part_length(),
-          //     b.get_hash_length());
+          IndexWriter* writer = new TextIndexWriter(
+              b.loaded_document,
+              ir,
+              b.book_tags,
+              b.get_part_length(),
+              b.get_hash_length());
+          t1 = clock();
+          writer->write(index_folder);
+          t2 = clock();
+          std::cout << "Write elapsed: " << (double)(t2 - t1) / 1e+6 << '\n';
         }
       }
     }

@@ -53,49 +53,58 @@ using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
 struct IndexerResult {
   std::vector<indexmap> full_index;
   void traverse() const {
-    for (auto &i : full_index) 
-      for (auto &idx : i) {
-        std::cout << idx.first << " ";
+    for (auto& i : full_index)
+      for (auto& idx : i) {
+        std::cout << "\n" << idx.first << " ";
         idx.second.print_format();
       }
-        
   };
 };
 
 class IndexWriter {
  public:
-  virtual void write(
-      const docmap& csv,
-      cstr& path,
-      const int part_len,
-      const int hash_len) const = 0;
-  virtual void fill_docs(cstr& books_name) const = 0;
+  virtual void write(cstr& path) const = 0;
+  virtual void write_one(
+      cstr& ngram,
+      const InvertedIndex& cur,
+      std::ofstream& file) const = 0;
+  // virtual void fill_docs(cstr& books_name) const = 0;
   // virtual void fill_entries(cstr& parsed) const = 0;
 };
 
 class TextIndexWriter : public IndexWriter {
  protected:
-  int a, b;
+  docmap& docindex;
+  IndexerResult& indexresult;
+  std::vector<std::pair<str, short>>& book_tags;
+
+  int part_length;
+  int hash_length;
 
  public:
-  void write(
-      const docmap& csv,
-      cstr& path,
-      const int part_len,
-      const int hash_len) const override;
-  void fill_docs(cstr& books_name) const override;
+  TextIndexWriter(
+      docmap& dm,
+      IndexerResult& ir,
+      std::vector<std::pair<str, short>>& bm,
+      const int p_l = 2,
+      const int h_l = 6);
+  void write(cstr& path) const override;
+  void write_one(cstr& ngram, const InvertedIndex& cur, std::ofstream& file)
+      const override;
+  str name_to_hash(cstr& name) const;
   // void fill_entries(cstr& parsed) const override;
 };
 
 class IndexBuilder {
  private:
   Parser p;
-  std::vector<std::pair<str, short>> book_tags;
+
   int part_length;
   int hash_length;
 
  public:
   docmap loaded_document;
+  std::vector<std::pair<str, short>> book_tags;
 
   IndexBuilder();
   IndexBuilder(cstr& books_name, cstr& config_name);
