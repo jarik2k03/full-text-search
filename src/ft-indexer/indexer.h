@@ -49,6 +49,7 @@ struct ParsedDocument {
 using prvector = std::vector<str, ParserResult>;
 using docmap = std::map<str, ParsedDocument>; // ключ - docID
 using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
+using booktagsvector = std::vector<std::pair<str, short>>;
 
 struct IndexerResult {
   std::vector<indexmap> full_index;
@@ -76,7 +77,7 @@ class TextIndexWriter : public IndexWriter {
  protected:
   docmap& docindex;
   IndexerResult& indexresult;
-  std::vector<std::pair<str, short>>& book_tags;
+  booktagsvector& book_tags;
 
   int part_length;
   int hash_length;
@@ -85,28 +86,30 @@ class TextIndexWriter : public IndexWriter {
   TextIndexWriter(
       docmap& dm,
       IndexerResult& ir,
-      std::vector<std::pair<str, short>>& bm,
+      booktagsvector& bm,
       const int p_l = 2,
       const int h_l = 6);
   void write(cstr& path) const override;
   void write_one(cstr& ngram, const InvertedIndex& cur, std::ofstream& file)
       const override;
   str name_to_hash(cstr& name) const;
-  // void fill_entries(cstr& parsed) const override;
 };
 
 class IndexBuilder {
  private:
   Parser p;
-
   int part_length;
   int hash_length;
-
  public:
   docmap loaded_document;
-  std::vector<std::pair<str, short>> book_tags;
+  booktagsvector book_tags;
 
-  IndexBuilder();
+  IndexBuilder(
+      docmap& ld,
+      booktagsvector& bt,
+      int p_l = 2,
+      int h_l = 6);
+  IndexBuilder(const booktagsvector& bt, int p_l=2, int h_l=6); 
   IndexBuilder(cstr& books_name, cstr& config_name);
 
   void add_for_ngram(indexmap& imap, cstr& ngram, const int row) const;
@@ -125,7 +128,6 @@ class IndexBuilder {
 
   void print_index_properties() const;
   void print_documents() const;
-  void print_results() const;
 };
 
 void create_folder(cstr& name);

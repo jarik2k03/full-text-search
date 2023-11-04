@@ -12,27 +12,26 @@ target_include_directories(
 
 target_link_libraries(
     indexer
-    PRIVATE
-    pugixml
     PUBLIC
     picosha2
+    parser
 
 )
 
 # TEEEEST
 add_executable(
-  test-indexer
+  test.indexer.exe
   indexer.test.cxx
 )
 
-add_test(NAME FINAL_RESULT COMMAND test-indexer)
+add_test(NAME FINAL_RESULT COMMAND test.indexer.exe)
 enable_testing()
 
 target_link_libraries(
-  test-indexer
+  test.indexer.exe
   GTest::gtest_main
   indexer
 )
 
 include(GoogleTest)
-gtest_discover_tests(test-indexer)
+gtest_discover_tests(test.indexer.exe)

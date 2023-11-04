@@ -21,20 +21,20 @@ target_link_libraries(
 
 
 add_executable(
-  test-parser
+  test.parser.exe
   parser.test.cxx
 )
 
-add_test(NAME Fsp_summ COMMAND test-parser)
+add_test(NAME FINAL_RESULT COMMAND test.parser.exe)
 enable_testing()
 
 target_link_libraries(
-  test-parser
+  test.parser.exe
   GTest::gtest_main
   parser
 )
 
 include(GoogleTest)
-gtest_discover_tests(test-parser)
+gtest_discover_tests(test.parser.exe)
 
 

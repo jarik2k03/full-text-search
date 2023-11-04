@@ -1,6 +1,17 @@
 #include "indexer.h"
 
-IndexBuilder::IndexBuilder() : p({"to", "is", "with"}, 3, 6) {
+IndexBuilder::IndexBuilder(const booktagsvector& bt, int p_l, int h_l) 
+    : part_length(p_l),
+      hash_length(h_l),
+      p({"to", "is", "with"}, 3, 6) {
+}
+
+IndexBuilder::IndexBuilder(docmap& ld, booktagsvector& bt, int p_l, int h_l)
+    : loaded_document(ld),
+      book_tags(bt),
+      part_length(p_l),
+      hash_length(h_l),
+      p({"to", "is", "with"}, 3, 6) {
 }
 
 IndexBuilder::IndexBuilder(cstr& books_name, cstr& config_name)
@@ -22,15 +33,6 @@ IndexBuilder::IndexBuilder(cstr& books_name, cstr& config_name)
   }
   books.close();
 }
-
-void IndexBuilder::print_results() const {
-  p.print_config();
-  // for (const auto& [pr, id] : save_parsed) {
-  //   std::cout << "Document id: " << id << "\n";
-  //   pr.ngrams_traverse();
-  // }
-}
-
 bool IndexBuilder::add_document(str& line) {
   auto it = book_tags.begin();
   auto delim = line.find_first_of(',');
@@ -52,7 +54,6 @@ bool IndexBuilder::add_document(str& line) {
 
   return false;
 }
-
 bool IndexBuilder::read_index_properties(cstr& config_name) {
   pugi::xml_document doc;
   const pugi::xml_parse_result parsed = doc.load_file(config_name.c_str());
@@ -69,15 +70,12 @@ bool IndexBuilder::read_index_properties(cstr& config_name) {
     short c = (val == "true") ? -1 : count;
     book_tags.emplace_back(i.text().as_string(), c);
   }
-
   return false;
 }
-
 void IndexBuilder::print_index_properties() const {
   for (const auto& [key, pos] : book_tags)
     std::cout << "Book tag: " << key << "; Position: " << pos << '\n';
 }
-
 void IndexBuilder::print_documents() const {
   for (const auto& [id, pd] : loaded_document) {
     std::cout << "\n[" << id << "] ~ ";
@@ -86,7 +84,6 @@ void IndexBuilder::print_documents() const {
     }
   }
 }
-
 IndexerResult IndexBuilder::build_inverted_index() {
   IndexerResult ir;
   indexmap imap;
@@ -96,7 +93,6 @@ IndexerResult IndexBuilder::build_inverted_index() {
   }
 
   for (const auto& [id, doc] : loaded_document) {
-    // std::cout << "--------ROW------\n";
     for (int pos = 0; pos < ir.full_index.size() - 1; ++pos) {
       for (const auto ngram : doc.parsed.at(pos).ngrams) {
         add_for_ngram(ir.full_index.at(pos), ngram.first, pos);
@@ -106,7 +102,6 @@ IndexerResult IndexBuilder::build_inverted_index() {
   }
   return ir;
 }
-
 void IndexBuilder::add_for_ngram(indexmap& imap, cstr& ngram, const int row)
     const {
   InvertedIndex indexed;
@@ -128,14 +123,14 @@ void IndexBuilder::add_for_ngram(indexmap& imap, cstr& ngram, const int row)
   }
   imap.insert({ngram, indexed});
 }
-
 bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
   const auto& it = book_tags.begin() + pos - 1;
-  std::cout << "Line: " << line << " Pos: " << pos << '\n';
+  // std::cout << "Line: " << line << " Pos: " << pos << '\n';
   if (it->first != line && it->second != -1)
     return true;
   return false;
 }
+
 
 TextIndexWriter::TextIndexWriter(
     docmap& dm,
@@ -149,11 +144,9 @@ TextIndexWriter::TextIndexWriter(
       part_length(p_l),
       hash_length(h_l) {
 }
-
 str TextIndexWriter::name_to_hash(cstr& name) const {
   return picosha2::hash256_hex_string(name).substr(0, hash_length);
 }
-
 void TextIndexWriter::write(cstr& path) const {
   ASSERT(docindex.empty(), "БД книг не найдена. Невозможна запись!");
   std::ofstream doc;
@@ -190,7 +183,6 @@ void TextIndexWriter::write(cstr& path) const {
     }
   }
 }
-
 void TextIndexWriter::write_one(
     cstr& ngram,
     const InvertedIndex& cur,

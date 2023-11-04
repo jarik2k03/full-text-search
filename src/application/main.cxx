@@ -38,8 +38,6 @@ int main(int argc, char** argv) {
         IndexerResult ir = b.build_inverted_index();
         auto t2 = clock();
         std::cout << "Time elapsed: " << (double)(t2 - t1) / 1e+6 << '\n';
-        // b.print_index_properties();
-        // b.print_documents();
         if (pr.count("index")) {
           IndexWriter* writer = new TextIndexWriter(
               b.loaded_document,

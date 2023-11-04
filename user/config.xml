@@ -39,7 +39,7 @@
         <word>with</word>
       </stop_words>
    </ngram>
-   <indexer part_length="3" hash_length="6">
+   <indexer part_length="2" hash_length="6">
       <field>bookID</field>
       <field>title</field>
       <field ignore="true">authors</field>
