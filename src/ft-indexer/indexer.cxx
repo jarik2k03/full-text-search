@@ -38,7 +38,7 @@ bool IndexBuilder::add_document(str& line) {
   auto delim = line.find_first_of(',');
   str bufstr = {0};
   bufstr.clear();
-  ParsedDocument pd;
+  CommonIndex pd;
   std::stringstream ss(line);
 
   std::getline(ss, bufstr, ',');
@@ -46,8 +46,7 @@ bool IndexBuilder::add_document(str& line) {
   while (std::getline(ss, bufstr, ',')) {
     ++it;
     if (it->second != -1) {
-      pd.tags.emplace_back(bufstr);
-      pd.parsed.emplace_back(p.parse(bufstr));
+      pd.emplace_back(bufstr);
     }
   }
   loaded_document.insert({id, pd});
@@ -79,7 +78,7 @@ void IndexBuilder::print_index_properties() const {
 void IndexBuilder::print_documents() const {
   for (const auto& [id, pd] : loaded_document) {
     std::cout << "\n[" << id << "] ~ ";
-    for (const auto tag : pd.tags) {
+    for (const auto tag : pd) {
       std::cout << tag << '\t';
     }
   }
@@ -94,10 +93,10 @@ IndexerResult IndexBuilder::build_inverted_index() {
 
   for (const auto& [id, doc] : loaded_document) {
     for (int pos = 0; pos < ir.full_index.size() - 1; ++pos) {
-      for (const auto ngram : doc.parsed.at(pos).ngrams) {
-        add_for_ngram(ir.full_index.at(pos), ngram.first, pos);
-        // ir.traverse();
-      }
+      // for (const auto ngram : doc.parsed.at(pos).ngrams) {
+      //   add_for_ngram(ir.full_index.at(pos), ngram.first, pos);
+      //   // ir.traverse();
+      // }
     }
   }
   return ir;
@@ -107,7 +106,8 @@ void IndexBuilder::add_for_ngram(indexmap& imap, cstr& ngram, const int row)
   InvertedIndex indexed;
 
   for (const auto& [id, data] : loaded_document) {
-    auto& ng = data.parsed.at(row).ngrams;
+    // auto& ng = data.parsed.at(row).ngrams;
+    std::unordered_multimap<str, uint8_t> ng;
     InvertedIndex_ entr;
     auto node = ng.find(ngram);
     if (node != ng.end() && imap.find(ngram) == imap.end()) {
@@ -155,7 +155,7 @@ void TextIndexWriter::write(cstr& path) const {
   for (const auto& [id, data] : (1, docindex)) {
     cstr namefile = docpath + id;
     doc.open(namefile + ".page", std::ios::out);
-    for (const auto attr : data.tags) {
+    for (const auto attr : data) {
       doc << attr << '\n';
     }
     doc.close();
@@ -187,13 +187,17 @@ void TextIndexWriter::write_one(
     cstr& ngram,
     const InvertedIndex& cur,
     std::ofstream& file) const {
-  file << ngram << " " << cur.doc_count << " ";
+
+  std::stringstream buffer;
+
+  buffer << ngram << " " << cur.doc_count << " ";
   for (auto& idx : cur.entries) {
-    file << idx.doc_id << " " << idx.pos_count << " ";
+    buffer << idx.doc_id << " " << idx.pos_count << " ";
     for (auto i : idx.ntoken)
-      file << i << " ";
+      buffer << i << " ";
   }
-  file << '\n';
+  buffer << '\n';
+  file << buffer.rdbuf();
 }
 
 void create_folder(cstr& fullpath) {

@@ -41,13 +41,9 @@ struct InvertedIndex {
   }
 };
 
-struct ParsedDocument {
-  std::vector<str> tags;
-  std::vector<ParserResult> parsed;
-};
-
+using CommonIndex = std::vector<str>;
 using prvector = std::vector<str, ParserResult>;
-using docmap = std::map<str, ParsedDocument>; // ключ - docID
+using docmap = std::map<str, CommonIndex>; // ключ - docID
 using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
 
