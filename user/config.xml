@@ -40,17 +40,17 @@
       </stop_words>
    </ngram>
    <indexer part_length="3" hash_length="6">
-      <field>bookID</field>
-      <field>title</field>
-      <field ignore="true">authors</field>
-      <field ignore="true">average_rating</field>
-      <field ignore="true">isbn</field>
-      <field ignore="true">isbn13</field>
-      <field ignore="true">language_code</field>
-      <field ignore="true">num_pages</field>
-      <field>ratings_count</field>
-      <field ignore="true">text_reviews_count</field>
-      <field ignore="true">publication_date</field>
-      <field ignore="true">publisher</field>
+      <field>Book_ID</field>
+      <field>Title</field>
+      <field>Authors</field>
+      <field>Average_rating</field>
+      <field>ISBN</field>
+      <field>ISBN13</field>
+      <field>Language_Code</field>
+      <field>Num_pages</field>
+      <field>Ratings_count</field>
+      <field>Text_reviews_count</field>
+      <field>Publication_date</field>
+      <field>Publisher</field>
    </indexer>
 </fts>

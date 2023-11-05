@@ -11,43 +11,45 @@
 #include <vector>
 
 struct InvertedIndex_ {
-  str doc_id;
   int pos_count;
-  std::vector<int> ntoken;
+  std::vector<uint8_t> ntoken;
   InvertedIndex_() : pos_count(0) {
   }
-  InvertedIndex_(cstr& d, int p, std::vector<int>& tk)
-      : doc_id(d), pos_count(p), ntoken(tk) {
+  InvertedIndex_(int p, std::vector<uint8_t>& tks) : pos_count(p), ntoken(tks) {
+  }
+  // самый частый конструктор
+  InvertedIndex_(uint8_t tk) : pos_count(1) {
+    ntoken.emplace_back(tk);
   }
   void print_format() const {
-    std::cout << " " << doc_id << " " << pos_count;
+    std::cout << " " << pos_count;
     for (auto i : ntoken)
       std::cout << " " << i;
   }
 };
 struct InvertedIndex {
   int doc_count;
-  std::vector<InvertedIndex_> entries;
+  std::map<int, InvertedIndex_> map;
 
   InvertedIndex() : doc_count(0) {
   }
-  InvertedIndex(int d, std::vector<InvertedIndex_>& e)
-      : doc_count(d), entries(e) {
+  InvertedIndex(int d, std::map<int, InvertedIndex_>& e)
+      : doc_count(d), map(e) {
   }
   void print_format() const {
     std::cout << " " << doc_count;
-    for (auto i : entries)
-      i.print_format();
+    for (auto i : map)
+      i.second.print_format();
   }
 };
-
 using CommonIndex = std::vector<str>;
-using prvector = std::vector<str, ParserResult>;
+
 using docmap = std::map<str, CommonIndex>; // ключ - docID
 using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
+
 using booktagsvector = std::vector<std::pair<str, short>>;
 
-struct IndexerResult {
+struct InvertedResult {
   std::vector<indexmap> full_index;
   void traverse() const {
     for (auto& i : full_index)
@@ -60,19 +62,20 @@ struct IndexerResult {
 
 class IndexWriter {
  public:
-  virtual void write(cstr& path) const = 0;
-  virtual void write_one(
+  virtual void write_common(cstr& path) const = 0;
+  virtual void write_inverted(cstr& path) const = 0;
+  virtual void write_one_common(const CommonIndex& data, std::ofstream& file)
+      const = 0;
+  virtual void write_one_inverted(
       cstr& ngram,
       const InvertedIndex& cur,
       std::ofstream& file) const = 0;
-  // virtual void fill_docs(cstr& books_name) const = 0;
-  // virtual void fill_entries(cstr& parsed) const = 0;
 };
 
 class TextIndexWriter : public IndexWriter {
  protected:
   docmap& docindex;
-  IndexerResult& indexresult;
+  InvertedResult& indexresult;
   booktagsvector& book_tags;
 
   int part_length;
@@ -81,13 +84,18 @@ class TextIndexWriter : public IndexWriter {
  public:
   TextIndexWriter(
       docmap& dm,
-      IndexerResult& ir,
+      InvertedResult& ir,
       booktagsvector& bm,
       const int p_l = 2,
       const int h_l = 6);
-  void write(cstr& path) const override;
-  void write_one(cstr& ngram, const InvertedIndex& cur, std::ofstream& file)
+  void write_common(cstr& path) const override;
+  void write_inverted(cstr& path) const override;
+  void write_one_common(const CommonIndex& data, std::ofstream& file)
       const override;
+  void write_one_inverted(
+      cstr& ngram,
+      const InvertedIndex& cur,
+      std::ofstream& file) const override;
   str name_to_hash(cstr& name) const;
 };
 
@@ -96,20 +104,21 @@ class IndexBuilder {
   Parser p;
   int part_length;
   int hash_length;
+
  public:
   docmap loaded_document;
   booktagsvector book_tags;
 
-  IndexBuilder(
-      docmap& ld,
-      booktagsvector& bt,
-      int p_l = 2,
-      int h_l = 6);
-  IndexBuilder(const booktagsvector& bt, int p_l=2, int h_l=6); 
+  IndexBuilder(docmap& ld, booktagsvector& bt, int p_l = 2, int h_l = 6);
+  IndexBuilder(const booktagsvector& bt, int p_l = 2, int h_l = 6);
   IndexBuilder(cstr& books_name, cstr& config_name);
 
-  void add_for_ngram(indexmap& imap, cstr& ngram, const int row) const;
-  IndexerResult build_inverted_index();
+  void add_one_inverted(
+      indexmap& imap,
+      const std::pair<cstr, uint8_t>& ng,
+      const int row,
+      const int cur_id) const;
+  InvertedResult build_inverted();
 
   int get_part_length() const {
     return part_length;
@@ -118,7 +127,7 @@ class IndexBuilder {
     return hash_length;
   }
 
-  bool add_document(str& line);
+  bool add_one_common(str& line);
   bool read_index_properties(cstr& config_name);
   bool check_eq_tags(cstr& line, short pos) const;
 

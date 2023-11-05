@@ -32,12 +32,16 @@ int main(int argc, char** argv) {
         str book_name = pr["book"].as<str>();
         cstr config_name = pr["config"].as<str>();
         cstr index_folder = pr["index"].as<str>();
-
-        IndexBuilder b(book_name, config_name);
         auto t1 = clock();
-        IndexerResult ir = b.build_inverted_index();
+        IndexBuilder b(book_name, config_name);
         auto t2 = clock();
-        std::cout << "Time elapsed: " << (double)(t2 - t1) / 1e+6 << '\n';
+        std::cout << "Build common index elapsed: " << (double)(t2 - t1) / 1e+6
+                  << '\n';
+        InvertedResult ir = b.build_inverted();
+        t1 = clock();
+        std::cout << "Build inverted index elapsed: "
+                  << (double)(t1 - t2) / 1e+6 << '\n';
+
         if (pr.count("index")) {
           IndexWriter* writer = new TextIndexWriter(
               b.loaded_document,
@@ -46,9 +50,14 @@ int main(int argc, char** argv) {
               b.get_part_length(),
               b.get_hash_length());
           t1 = clock();
-          writer->write(index_folder);
+          writer->write_common(index_folder);
           t2 = clock();
-          std::cout << "Write elapsed: " << (double)(t2 - t1) / 1e+6 << '\n';
+          std::cout << "Write common index elapsed: "
+                    << (double)(t2 - t1) / 1e+6 << '\n';
+          writer->write_inverted(index_folder);
+          t1 = clock();
+          std::cout << "Write inverted index elapsed: "
+                    << (double)(t1 - t2) / 1e+6 << '\n';
         }
       }
     }

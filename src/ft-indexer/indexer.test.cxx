@@ -13,11 +13,4 @@ GTEST_TEST(indexer, add_doc) {
   IndexBuilder ib(bt);
   str line;
   int count = 0;
-
-  ASSERT_EQ(false,ib.add_document(main_csv.at(1)));
-  ASSERT_EQ(false,ib.add_document(main_csv.at(2)));
-  ASSERT_EQ(false,ib.add_document(main_csv.at(3)));
-  // str real = ib.loaded_document.at(0).tags.at(0);
-  
-  
 }

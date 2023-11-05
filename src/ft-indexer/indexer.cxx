@@ -1,9 +1,7 @@
 #include "indexer.h"
 
-IndexBuilder::IndexBuilder(const booktagsvector& bt, int p_l, int h_l) 
-    : part_length(p_l),
-      hash_length(h_l),
-      p({"to", "is", "with"}, 3, 6) {
+IndexBuilder::IndexBuilder(const booktagsvector& bt, int p_l, int h_l)
+    : part_length(p_l), hash_length(h_l), p({"to", "is", "with"}, 3, 6) {
 }
 
 IndexBuilder::IndexBuilder(docmap& ld, booktagsvector& bt, int p_l, int h_l)
@@ -29,11 +27,11 @@ IndexBuilder::IndexBuilder(cstr& books_name, cstr& config_name)
     ASSERT(check_eq_tags(line, ++count), "Несоответствие атрибута БД: " + line);
   }
   while (std::getline(books, line)) {
-    add_document(line);
+    add_one_common(line);
   }
   books.close();
 }
-bool IndexBuilder::add_document(str& line) {
+bool IndexBuilder::add_one_common(str& line) {
   auto it = book_tags.begin();
   auto delim = line.find_first_of(',');
   str bufstr = {0};
@@ -83,58 +81,65 @@ void IndexBuilder::print_documents() const {
     }
   }
 }
-IndexerResult IndexBuilder::build_inverted_index() {
-  IndexerResult ir;
+
+InvertedResult IndexBuilder::build_inverted() {
+  InvertedResult ir;
   indexmap imap;
+  // пре-инициализация индексных деревьев для каждого атрибута
   for (const auto& [tag, p] : book_tags) {
     if (p != -1)
       ir.full_index.push_back(imap);
   }
-
+  // for: обход по докам (cols) - O (n)
   for (const auto& [id, doc] : loaded_document) {
-    for (int pos = 0; pos < ir.full_index.size() - 1; ++pos) {
-      // for (const auto ngram : doc.parsed.at(pos).ngrams) {
-      //   add_for_ngram(ir.full_index.at(pos), ngram.first, pos);
-      //   // ir.traverse();
-      // }
+    // for: обход по аттрибутам (rows) - O (m)
+    for (int row_attr = 0; row_attr < ir.full_index.size() - 1; ++row_attr) {
+      str unparsed_attr = doc.at(row_attr);
+      ParserResult doc_ngrams = p.parse(unparsed_attr);
+      // for: обход всех нграмм из атрибута и заполнение - O (nwords*(max-min))
+      for (const auto& ngram_node : doc_ngrams.ngrams) {
+        add_one_inverted(
+            ir.full_index.at(row_attr), ngram_node, row_attr, std::stoi(id));
+      }
     }
   }
   return ir;
 }
-void IndexBuilder::add_for_ngram(indexmap& imap, cstr& ngram, const int row)
-    const {
-  InvertedIndex indexed;
-
-  for (const auto& [id, data] : loaded_document) {
-    // auto& ng = data.parsed.at(row).ngrams;
-    std::unordered_multimap<str, uint8_t> ng;
-    InvertedIndex_ entr;
-    auto node = ng.find(ngram);
-    if (node != ng.end() && imap.find(ngram) == imap.end()) {
-      auto range = ng.equal_range(ngram);
-      for (auto d = range.first; d != range.second; ++d) { // ~ O(1)
-        entr.ntoken.emplace_back(d->second);
-        ++entr.pos_count;
-      }
-      entr.doc_id = id;
-      indexed.entries.emplace_back(entr);
-      ++indexed.doc_count;
-    }
+void IndexBuilder::add_one_inverted(
+    indexmap& imap,
+    const std::pair<cstr, uint8_t>& ng,
+    const int row,
+    const int cur_id) const {
+  auto node = imap.find(ng.first);
+  if (node == imap.end()) {
+    InvertedIndex new_node;
+    node = imap.insert(node, {ng.first, new_node});
   }
-  imap.insert({ngram, indexed});
+  InvertedIndex& inv_index = node->second;
+  auto inv_index__node = inv_index.map.find(cur_id);
+  if (inv_index__node == inv_index.map.end()) {
+    // добавить вхождение документа
+    ++inv_index.doc_count;
+    InvertedIndex_ new_inv_index_(ng.second);
+    inv_index.map.insert({cur_id, new_inv_index_});
+  } else {
+    // при наличии документа добавить токен (во избежание дублирования)
+    InvertedIndex_& inv_index_ = inv_index__node->second;
+    ++inv_index_.pos_count;
+    inv_index_.ntoken.emplace_back(ng.second);
+  }
 }
+
 bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
   const auto& it = book_tags.begin() + pos - 1;
-  // std::cout << "Line: " << line << " Pos: " << pos << '\n';
   if (it->first != line && it->second != -1)
     return true;
   return false;
 }
 
-
 TextIndexWriter::TextIndexWriter(
     docmap& dm,
-    IndexerResult& ir,
+    InvertedResult& ir,
     std::vector<std::pair<str, short>>& bm,
     const int p_l,
     const int h_l)
@@ -147,7 +152,7 @@ TextIndexWriter::TextIndexWriter(
 str TextIndexWriter::name_to_hash(cstr& name) const {
   return picosha2::hash256_hex_string(name).substr(0, hash_length);
 }
-void TextIndexWriter::write(cstr& path) const {
+void TextIndexWriter::write_common(cstr& path) const {
   ASSERT(docindex.empty(), "БД книг не найдена. Невозможна запись!");
   std::ofstream doc;
   cstr docpath = path + "/docs/";
@@ -160,8 +165,20 @@ void TextIndexWriter::write(cstr& path) const {
     }
     doc.close();
   }
-  cstr entrpath = path + "/entries/";
+}
 
+void TextIndexWriter::write_one_common(
+    const CommonIndex& data,
+    std::ofstream& file) const {
+  for (const auto attr : data) {
+    file << attr << '\n';
+  }
+}
+
+void TextIndexWriter::write_inverted(cstr& path) const {
+  ASSERT(
+      indexresult.full_index.empty(), "БД книг не найдена. Невозможна запись!");
+  cstr entrpath = path + "/entries/";
   create_folder(entrpath);
   std::ofstream ngram_fileset;
   str prev_part = "";
@@ -178,23 +195,22 @@ void TextIndexWriter::write(cstr& path) const {
         ngram_fileset.close();
         ngram_fileset.open(attr_ngrams_path.str() + part, std::ios::out);
       }
-      write_one(idx, entr, ngram_fileset);
+      write_one_inverted(idx, entr, ngram_fileset);
       prev_part = part;
     }
   }
 }
-void TextIndexWriter::write_one(
+void TextIndexWriter::write_one_inverted(
     cstr& ngram,
     const InvertedIndex& cur,
     std::ofstream& file) const {
-
   std::stringstream buffer;
 
   buffer << ngram << " " << cur.doc_count << " ";
-  for (auto& idx : cur.entries) {
-    buffer << idx.doc_id << " " << idx.pos_count << " ";
+  for (const auto& [id, idx] : cur.map) {
+    buffer << id << " " << idx.pos_count << " ";
     for (auto i : idx.ntoken)
-      buffer << i << " ";
+      buffer << +i << " ";
   }
   buffer << '\n';
   file << buffer.rdbuf();
