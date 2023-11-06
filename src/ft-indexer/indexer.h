@@ -18,7 +18,7 @@ struct InvertedIndex_ {
   std::vector<uint8_t> ntoken;
   InvertedIndex_() : pos_count(0) {
   }
-  InvertedIndex_(int p, std::vector<uint8_t>& tks) : pos_count(p), ntoken(tks) {
+  InvertedIndex_(int p, std::vector<uint8_t> tks) : pos_count(p), ntoken(tks) {
   }
   // самый частый конструктор
   InvertedIndex_(uint8_t tk) : pos_count(1) {
@@ -36,8 +36,7 @@ struct InvertedIndex {
 
   InvertedIndex() : doc_count(0) {
   }
-  InvertedIndex(int d, std::map<int, InvertedIndex_>& e)
-      : doc_count(d), map(e) {
+  InvertedIndex(int d, std::map<int, InvertedIndex_> e) : doc_count(d), map(e) {
   }
   void print_format() const {
     std::cout << " " << doc_count;
@@ -112,9 +111,10 @@ class IndexBuilder {
  public:
   commonmap loaded_document;
   booktagsvector book_tags;
-
-  IndexBuilder(const commonmap& ld, const booktagsvector& bt);
+  IndexBuilder();
   IndexBuilder(const booktagsvector& bt);
+  IndexBuilder(const pugi::xml_document& d);
+  IndexBuilder(const commonmap& ld, const booktagsvector& bt);
   IndexBuilder(const pugi::xml_document& d, cstr& books_name);
 
   void add_one_inverted(
@@ -123,8 +123,10 @@ class IndexBuilder {
       const int row,
       const int cur_id) const;
   InvertedResult build_inverted();
-
-  bool add_one_common(str& line);
+  InvertedResult build_inverted(const commonmap& external);
+  commonmap build_common(cstr& book_name);
+  commonmap build_common(std::vector<str>& ram_book);
+  bool add_one_common(commonmap& doc, str& line);
   bool set_data(const pugi::xml_document& d);
   bool check_eq_tags(cstr& line, short pos) const;
 

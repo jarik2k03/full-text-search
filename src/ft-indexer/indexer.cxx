@@ -1,33 +1,58 @@
 #include "indexer.h"
 
-IndexBuilder::IndexBuilder(const booktagsvector& bt)
-    : p({"to", "is", "with"}, 3, 6) {
+IndexBuilder::IndexBuilder() : p({"to", "is", "with"}, 3, 6) {
 }
 
+IndexBuilder::IndexBuilder(const booktagsvector& bt)
+    : p({"to", "is", "with"}, 3, 6), book_tags(bt) {
+}
+
+IndexBuilder::IndexBuilder(const pugi::xml_document& d) : p(d) {
+  ASSERT(set_data(d), "Не найден конфиг!");
+  ;
+}
 IndexBuilder::IndexBuilder(const commonmap& ld, const booktagsvector& bt)
     : loaded_document(ld), book_tags(bt), p({"to", "is", "with"}, 3, 6) {
 }
 
 IndexBuilder::IndexBuilder(const pugi::xml_document& d, cstr& books_name)
     : p(d) {
-  std::ifstream books(books_name);
-  ASSERT(!books, "Не найдена база книг для индексации!");
   ASSERT(set_data(d), "Не найден конфиг!");
+  loaded_document = build_common(books_name);
+}
 
-  str line;
-  std::cout << books_name << "\n";
+commonmap IndexBuilder::build_common(std::vector<str>& ram_book) {
+  commonmap new_index;
+  str line = ram_book.at(0);
   int count = 0;
-  std::getline(books, line);
   std::stringstream ss(line);
   while (std::getline(ss, line, ',')) {
     ASSERT(check_eq_tags(line, ++count), "Несоответствие атрибута БД: " + line);
   }
-  while (std::getline(books, line)) {
-    add_one_common(line);
+  for (auto& l : ram_book) {
+    add_one_common(new_index, l);
   }
-  books.close();
+  return new_index;
 }
-bool IndexBuilder::add_one_common(str& line) {
+commonmap IndexBuilder::build_common(cstr& book_name) {
+  std::ifstream book(book_name);
+  ASSERT(!book, "Не найдена база книг для индексации!");
+  commonmap new_index;
+  str line;
+  std::cout << book_name << "\n";
+  int count = 0;
+  std::getline(book, line);
+  std::stringstream ss(line);
+  while (std::getline(ss, line, ',')) {
+    ASSERT(check_eq_tags(line, ++count), "Несоответствие атрибута БД: " + line);
+  }
+  while (std::getline(book, line)) {
+    add_one_common(new_index, line);
+  }
+  book.close();
+  return new_index;
+}
+bool IndexBuilder::add_one_common(commonmap& doc, str& line) {
   auto it = book_tags.begin();
   auto delim = line.find_first_of(',');
   str bufstr = {0};
@@ -43,8 +68,7 @@ bool IndexBuilder::add_one_common(str& line) {
       pd.emplace_back(bufstr);
     }
   }
-  loaded_document.insert({id, pd});
-
+  doc.insert({id, pd});
   return false;
 }
 bool IndexBuilder::set_data(const pugi::xml_document& d) {
@@ -73,28 +97,64 @@ void IndexBuilder::print_documents() const {
 }
 
 InvertedResult IndexBuilder::build_inverted() {
-  InvertedResult ir;
+  InvertedResult new_ir;
   invertedmap imap;
+  ASSERT(
+      loaded_document.empty(),
+      "БД книг не создана! Используйте конструктор build_inverted с внешним "
+      "прямым индексом (commonmap) или назначьте его в IndexBuilder.");
   // пре-инициализация индексных деревьев для каждого атрибута
   for (const auto& [tag, p] : book_tags) {
     if (p != -1)
-      ir.full_index.push_back(imap);
+      new_ir.full_index.push_back(imap);
   }
   // for: обход по докам (cols) - O (n)
   for (const auto& [id, doc] : loaded_document) {
     // for: обход по аттрибутам (rows) - O (m)
-    for (int row_attr = 0; row_attr < ir.full_index.size() - 1; ++row_attr) {
+    for (int row_attr = 0; row_attr < new_ir.full_index.size() - 1;
+         ++row_attr) {
       str unparsed_attr = doc.at(row_attr);
       ParserResult doc_ngrams = p.parse(unparsed_attr);
       // for: обход всех нграмм из атрибута и заполнение - O (nwords*(max-min))
       for (const auto& ngram_node : doc_ngrams.ngrams) {
         add_one_inverted(
-            ir.full_index.at(row_attr), ngram_node, row_attr, std::stoi(id));
+            new_ir.full_index.at(row_attr),
+            ngram_node,
+            row_attr,
+            std::stoi(id));
       }
     }
   }
-  return ir;
+  return new_ir;
 }
+InvertedResult IndexBuilder::build_inverted(const commonmap& external) {
+  InvertedResult new_ir;
+  invertedmap imap;
+  // пре-инициализация индексных деревьев для каждого атрибута
+  for (const auto& [tag, p] : book_tags) {
+    if (p != -1)
+      new_ir.full_index.push_back(imap);
+  }
+  // for: обход по докам (cols) - O (n)
+  for (const auto& [id, doc] : external) {
+    // for: обход по аттрибутам (rows) - O (m)
+    for (int row_attr = 0; row_attr < new_ir.full_index.size() - 1;
+         ++row_attr) {
+      str unparsed_attr = doc.at(row_attr);
+      ParserResult doc_ngrams = p.parse(unparsed_attr);
+      // for: обход всех нграмм из атрибута и заполнение - O (nwords*(max-min))
+      for (const auto& ngram_node : doc_ngrams.ngrams) {
+        add_one_inverted(
+            new_ir.full_index.at(row_attr),
+            ngram_node,
+            row_attr,
+            std::stoi(id));
+      }
+    }
+  }
+  return new_ir;
+}
+
 void IndexBuilder::add_one_inverted(
     invertedmap& imap,
     const std::pair<cstr, uint8_t>& ng,

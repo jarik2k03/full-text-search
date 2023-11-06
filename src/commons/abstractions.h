@@ -20,5 +20,6 @@ using uint = unsigned int;
 using cint = const int;
 using cstr = const std::string;
 using str = std::string;
+using std::make_pair;
 
 #endif
