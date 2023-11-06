@@ -1,22 +1,18 @@
 #include "indexer.h"
 
-IndexBuilder::IndexBuilder(const booktagsvector& bt, int p_l, int h_l)
-    : part_length(p_l), hash_length(h_l), p({"to", "is", "with"}, 3, 6) {
+IndexBuilder::IndexBuilder(const booktagsvector& bt)
+    : p({"to", "is", "with"}, 3, 6) {
 }
 
-IndexBuilder::IndexBuilder(docmap& ld, booktagsvector& bt, int p_l, int h_l)
-    : loaded_document(ld),
-      book_tags(bt),
-      part_length(p_l),
-      hash_length(h_l),
-      p({"to", "is", "with"}, 3, 6) {
+IndexBuilder::IndexBuilder(const commonmap& ld, const booktagsvector& bt)
+    : loaded_document(ld), book_tags(bt), p({"to", "is", "with"}, 3, 6) {
 }
 
-IndexBuilder::IndexBuilder(cstr& books_name, cstr& config_name)
-    : p(config_name) {
+IndexBuilder::IndexBuilder(const pugi::xml_document& d, cstr& books_name)
+    : p(d) {
   std::ifstream books(books_name);
   ASSERT(!books, "Не найдена база книг для индексации!");
-  ASSERT(read_index_properties(config_name), "Не найден конфиг!");
+  ASSERT(set_data(d), "Не найден конфиг!");
 
   str line;
   std::cout << books_name << "\n";
@@ -51,14 +47,8 @@ bool IndexBuilder::add_one_common(str& line) {
 
   return false;
 }
-bool IndexBuilder::read_index_properties(cstr& config_name) {
-  pugi::xml_document doc;
-  const pugi::xml_parse_result parsed = doc.load_file(config_name.c_str());
-  if (!parsed)
-    return true;
-  const pugi::xml_node indexer = doc.child("fts").child("indexer");
-  part_length = indexer.attribute("part_length").as_int();
-  hash_length = indexer.attribute("hash_length").as_int();
+bool IndexBuilder::set_data(const pugi::xml_document& d) {
+  const pugi::xml_node indexer = d.child("fts").child("indexer");
   int count = 0;
   for (pugi::xml_node i : indexer.children("field")) {
     auto ignore = i.attribute("ignore");
@@ -84,7 +74,7 @@ void IndexBuilder::print_documents() const {
 
 InvertedResult IndexBuilder::build_inverted() {
   InvertedResult ir;
-  indexmap imap;
+  invertedmap imap;
   // пре-инициализация индексных деревьев для каждого атрибута
   for (const auto& [tag, p] : book_tags) {
     if (p != -1)
@@ -106,7 +96,7 @@ InvertedResult IndexBuilder::build_inverted() {
   return ir;
 }
 void IndexBuilder::add_one_inverted(
-    indexmap& imap,
+    invertedmap& imap,
     const std::pair<cstr, uint8_t>& ng,
     const int row,
     const int cur_id) const {
@@ -137,22 +127,33 @@ bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
   return false;
 }
 
-TextIndexWriter::TextIndexWriter(
-    docmap& dm,
-    InvertedResult& ir,
-    std::vector<std::pair<str, short>>& bm,
-    const int p_l,
-    const int h_l)
-    : docindex(dm),
-      indexresult(ir),
-      book_tags(bm),
-      part_length(p_l),
-      hash_length(h_l) {
+TextIndexWriter::TextIndexWriter(const pugi::xml_document& d) {
+  set_data(d);
 }
+TextIndexWriter::TextIndexWriter(const booktagsvector& bt, cint p_l, cint h_l)
+    : book_tags(bt), part_length(p_l), hash_length(h_l) {
+}
+
+bool TextIndexWriter::set_data(const pugi::xml_document& d) {
+  const pugi::xml_node indexer = d.child("fts").child("indexer");
+  part_length = indexer.attribute("part_length").as_int();
+  hash_length = indexer.attribute("hash_length").as_int();
+  int count = 0;
+  for (pugi::xml_node i : indexer.children("field")) {
+    auto ignore = i.attribute("ignore");
+    ++count;
+    cstr val = ignore.value();
+    short c = (val == "true") ? -1 : count;
+    book_tags.emplace_back(i.text().as_string(), c);
+  }
+  return false;
+}
+
 str TextIndexWriter::name_to_hash(cstr& name) const {
   return picosha2::hash256_hex_string(name).substr(0, hash_length);
 }
-void TextIndexWriter::write_common(cstr& path) const {
+void TextIndexWriter::write_common(const commonmap& docindex, cstr& path)
+    const {
   ASSERT(docindex.empty(), "БД книг не найдена. Невозможна запись!");
   std::ofstream doc;
   cstr docpath = path + "/docs/";
@@ -175,7 +176,9 @@ void TextIndexWriter::write_one_common(
   }
 }
 
-void TextIndexWriter::write_inverted(cstr& path) const {
+void TextIndexWriter::write_inverted(
+    const InvertedResult& indexresult,
+    cstr& path) const {
   ASSERT(
       indexresult.full_index.empty(), "БД книг не найдена. Невозможна запись!");
   cstr entrpath = path + "/entries/";

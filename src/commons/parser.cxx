@@ -1,30 +1,21 @@
 #include "parser.h"
 
-Parser::Parser(cstr& name) {
-  ASSERT(read_config(name), "Не удалось найти конфиг");
+Parser::Parser(const pugi::xml_document& d) {
+  ASSERT(set_data(d), "Не удалось найти конфиг");
 }
 
 Parser::Parser(const str_uset& _set, uint _min, uint _max)
     : stopwords(_set), min(_min), max(_max) {
 }
 
-bool Parser::read_config(cstr& name) {
-  cstr docpath = name;
-  pugi::xml_document doc;
-  const pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
-  if (!parsed)
-    return true;
-
-  const pugi::xml_node ngram = doc.child("fts").child("ngram");
+bool Parser::set_data(const pugi::xml_document& d) {
+  const pugi::xml_node ngram = d.child("fts").child("ngram");
   min = ngram.attribute("min").as_uint();
   max = ngram.attribute("max").as_uint();
-
   const pugi::xml_node stop_words =
-      doc.child("fts").child("ngram").child("stop_words");
-
+      d.child("fts").child("ngram").child("stop_words");
   for (pugi::xml_node i : stop_words.children("word")) {
     stopwords.insert(i.text().as_string());
-    // std::cout << word.as_string() << "\n";
   }
   return false;
 }

@@ -1,3 +1,6 @@
+#ifndef INDEXER_H
+#define INDEXER_H
+
 #pragma once
 #include <commons/parser.h>
 
@@ -43,14 +46,12 @@ struct InvertedIndex {
   }
 };
 using CommonIndex = std::vector<str>;
-
-using docmap = std::map<str, CommonIndex>; // ключ - docID
-using indexmap = std::map<str, InvertedIndex>; // ключ - ngram
-
+using commonmap = std::map<str, CommonIndex>; // ключ - docID
+using invertedmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
 
 struct InvertedResult {
-  std::vector<indexmap> full_index;
+  std::vector<invertedmap> full_index;
   void traverse() const {
     for (auto& i : full_index)
       for (auto& idx : i) {
@@ -62,8 +63,10 @@ struct InvertedResult {
 
 class IndexWriter {
  public:
-  virtual void write_common(cstr& path) const = 0;
-  virtual void write_inverted(cstr& path) const = 0;
+  virtual bool set_data(const pugi::xml_document& d) = 0;
+  virtual void write_common(const commonmap& docindex, cstr& path) const = 0;
+  virtual void write_inverted(const InvertedResult& indexresult, cstr& path)
+      const = 0;
   virtual void write_one_common(const CommonIndex& data, std::ofstream& file)
       const = 0;
   virtual void write_one_inverted(
@@ -74,22 +77,18 @@ class IndexWriter {
 
 class TextIndexWriter : public IndexWriter {
  protected:
-  docmap& docindex;
-  InvertedResult& indexresult;
-  booktagsvector& book_tags;
-
+  booktagsvector book_tags;
   int part_length;
   int hash_length;
 
  public:
-  TextIndexWriter(
-      docmap& dm,
-      InvertedResult& ir,
-      booktagsvector& bm,
-      const int p_l = 2,
-      const int h_l = 6);
-  void write_common(cstr& path) const override;
-  void write_inverted(cstr& path) const override;
+  TextIndexWriter(const booktagsvector& bt, cint p_l = 3, cint h_l = 6);
+  TextIndexWriter(const pugi::xml_document& d);
+
+  bool set_data(const pugi::xml_document& d) override;
+  void write_common(const commonmap& docindex, cstr& path) const override;
+  void write_inverted(const InvertedResult& indexresult, cstr& path)
+      const override;
   void write_one_common(const CommonIndex& data, std::ofstream& file)
       const override;
   void write_one_inverted(
@@ -97,28 +96,6 @@ class TextIndexWriter : public IndexWriter {
       const InvertedIndex& cur,
       std::ofstream& file) const override;
   str name_to_hash(cstr& name) const;
-};
-
-class IndexBuilder {
- private:
-  Parser p;
-  int part_length;
-  int hash_length;
-
- public:
-  docmap loaded_document;
-  booktagsvector book_tags;
-
-  IndexBuilder(docmap& ld, booktagsvector& bt, int p_l = 2, int h_l = 6);
-  IndexBuilder(const booktagsvector& bt, int p_l = 2, int h_l = 6);
-  IndexBuilder(cstr& books_name, cstr& config_name);
-
-  void add_one_inverted(
-      indexmap& imap,
-      const std::pair<cstr, uint8_t>& ng,
-      const int row,
-      const int cur_id) const;
-  InvertedResult build_inverted();
 
   int get_part_length() const {
     return part_length;
@@ -126,9 +103,29 @@ class IndexBuilder {
   int get_hash_length() const {
     return hash_length;
   }
+};
+
+class IndexBuilder {
+ private:
+  Parser p;
+
+ public:
+  commonmap loaded_document;
+  booktagsvector book_tags;
+
+  IndexBuilder(const commonmap& ld, const booktagsvector& bt);
+  IndexBuilder(const booktagsvector& bt);
+  IndexBuilder(const pugi::xml_document& d, cstr& books_name);
+
+  void add_one_inverted(
+      invertedmap& imap,
+      const std::pair<cstr, uint8_t>& ng,
+      const int row,
+      const int cur_id) const;
+  InvertedResult build_inverted();
 
   bool add_one_common(str& line);
-  bool read_index_properties(cstr& config_name);
+  bool set_data(const pugi::xml_document& d);
   bool check_eq_tags(cstr& line, short pos) const;
 
   void print_index_properties() const;
@@ -136,3 +133,5 @@ class IndexBuilder {
 };
 
 void create_folder(cstr& name);
+
+#endif

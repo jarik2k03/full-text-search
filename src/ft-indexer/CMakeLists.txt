@@ -15,7 +15,6 @@ target_link_libraries(
     PUBLIC
     picosha2
     parser
-
 )
 
 # TEEEEST
@@ -24,7 +23,7 @@ add_executable(
   indexer.test.cxx
 )
 
-add_test(NAME FINAL_RESULT COMMAND test.indexer.exe)
+add_test(NAME Indexer_FINAL_RESULT COMMAND test.indexer.exe)
 enable_testing()
 
 target_link_libraries(

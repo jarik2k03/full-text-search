@@ -15,6 +15,7 @@ target_sources(
 target_link_libraries(
     ft-searcher.exe
     PRIVATE
+        configurator
         indexer
         parser
         cxxopts

@@ -1,6 +1,7 @@
 #include <cxxopts.hpp>
 
 #include <commons/abstractions.h>
+#include <commons/configurator.h>
 #include <ft-indexer/indexer.h>
 #include <unistd.h>
 #include <iostream>
@@ -28,36 +29,16 @@ int main(int argc, char** argv) {
 
     const ParseResult pr = opt.parse(argc, argv);
     if (pr.count("config")) {
+      Configurator user_config(pr["config"].as<str>());
       if (pr.count("book")) {
         str book_name = pr["book"].as<str>();
-        cstr config_name = pr["config"].as<str>();
         cstr index_folder = pr["index"].as<str>();
-        auto t1 = clock();
-        IndexBuilder b(book_name, config_name);
-        auto t2 = clock();
-        std::cout << "Build common index elapsed: " << (double)(t2 - t1) / 1e+6
-                  << '\n';
-        InvertedResult ir = b.build_inverted();
-        t1 = clock();
-        std::cout << "Build inverted index elapsed: "
-                  << (double)(t1 - t2) / 1e+6 << '\n';
-
+        IndexBuilder b(user_config.get_document(), book_name);
+        const InvertedResult ir = b.build_inverted();
         if (pr.count("index")) {
-          IndexWriter* writer = new TextIndexWriter(
-              b.loaded_document,
-              ir,
-              b.book_tags,
-              b.get_part_length(),
-              b.get_hash_length());
-          t1 = clock();
-          writer->write_common(index_folder);
-          t2 = clock();
-          std::cout << "Write common index elapsed: "
-                    << (double)(t2 - t1) / 1e+6 << '\n';
-          writer->write_inverted(index_folder);
-          t1 = clock();
-          std::cout << "Write inverted index elapsed: "
-                    << (double)(t1 - t2) / 1e+6 << '\n';
+          IndexWriter* writer = new TextIndexWriter(user_config.get_document());
+          writer->write_common(b.loaded_document, index_folder);
+          writer->write_inverted(ir, index_folder);
         }
       }
     }

@@ -1,5 +1,6 @@
 build/
 user/indexed/
+user/indexed copy/
 .vscode/
 *.o
 *.a
