@@ -16,7 +16,7 @@ target_link_libraries(
     picosha2
     parser
 )
-
+ 
 # TEEEEST
 add_executable(
   test.indexer.exe
