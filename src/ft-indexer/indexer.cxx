@@ -1,10 +1,10 @@
 #include "indexer.h"
 
-IndexBuilder::IndexBuilder() : p({"to", "is", "with"}, 3, 6) {
+IndexBuilder::IndexBuilder() : p({"to", "is", "with", "and", "on"}, 3, 6) {
 }
 
 IndexBuilder::IndexBuilder(const booktagsvector& bt)
-    : p({"to", "is", "with"}, 3, 6), book_tags(bt) {
+    : p({"to", "is", "with", "and", "on"}, 3, 6), book_tags(bt) {
 }
 
 IndexBuilder::IndexBuilder(const pugi::xml_document& d) : p(d) {
@@ -12,7 +12,9 @@ IndexBuilder::IndexBuilder(const pugi::xml_document& d) : p(d) {
   ;
 }
 IndexBuilder::IndexBuilder(const commonmap& ld, const booktagsvector& bt)
-    : loaded_document(ld), book_tags(bt), p({"to", "is", "with"}, 3, 6) {
+    : loaded_document(ld),
+      book_tags(bt),
+      p({"to", "is", "with", "and", "on"}, 3, 6) {
 }
 
 IndexBuilder::IndexBuilder(const pugi::xml_document& d, cstr& books_name)
@@ -29,8 +31,8 @@ commonmap IndexBuilder::build_common(std::vector<str>& ram_book) {
   while (std::getline(ss, line, ',')) {
     ASSERT(check_eq_tags(line, ++count), "Несоответствие атрибута БД: " + line);
   }
-  for (auto& l : ram_book) {
-    add_one_common(new_index, l);
+  for (auto l = ram_book.begin() + 1; l != ram_book.end(); ++l) {
+    add_one_common(new_index, *l);
   }
   return new_index;
 }
@@ -148,7 +150,7 @@ InvertedResult IndexBuilder::build_inverted(const commonmap& external) {
             new_ir.full_index.at(row_attr),
             ngram_node,
             row_attr,
-            std::stoi(id));
+            std::atoi(id.c_str()));
       }
     }
   }

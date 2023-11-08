@@ -22,8 +22,10 @@ build:
       - CC: gcc
         CXX: g++
         PRESET: release
+        RUN_CSC_CPP_LINT: run_csc_cpp_lint
       - CC: clang
         CXX: clang++
         PRESET:
           - debug
           - release
+        RUN_CSC_CPP_LINT: run_csc_cpp_lint
