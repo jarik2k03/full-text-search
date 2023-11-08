@@ -1,7 +1,7 @@
+#pragma once
 #ifndef INDEXER_H
 #define INDEXER_H
 
-#pragma once
 #include <commons/parser.h>
 
 #include <picosha2.h>

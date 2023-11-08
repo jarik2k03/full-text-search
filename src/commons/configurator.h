@@ -1,6 +1,7 @@
+#pragma once
 #ifndef CONFIGURATOR_H
 #define CONFIGURATOR_H
-#pragma once
+
 #include <commons/abstractions.h>
 #include <pugixml.hpp>
 

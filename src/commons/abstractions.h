@@ -1,7 +1,7 @@
+#pragma once
 #ifndef ABSTRACTIONS_H
 #define ABSTRACTIONS_H
 
-#pragma once
 #include <iostream>
 
 #define ASSERT(error, msg)                              \
