@@ -282,8 +282,5 @@ void TextIndexWriter::write_one_inverted(
 }
 
 void create_folder(cstr& fullpath) {
-#ifdef __linux
-  str command = "mkdir -p " + fullpath;
-  int t = std::system(command.c_str());
-#endif
+  std::filesystem::create_directory(fullpath);
 }
