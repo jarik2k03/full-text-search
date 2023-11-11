@@ -1,39 +1,27 @@
 #include "parser.h"
 
-Parser::Parser(cstr& name, cstr& path) : path_to_config(path) {
-  ASSERT(read_config(name), "Не удалось найти конфиг");
+Parser::Parser(const pugi::xml_document& d) {
+  ASSERT(set_data(d), "Не удалось найти конфиг");
 }
 
 Parser::Parser(const str_uset& _set, uint _min, uint _max)
     : stopwords(_set), min(_min), max(_max) {
 }
 
-bool Parser::read_config(cstr& name) {
-  if (path_to_config.empty())
-    return true;
-  cstr docpath = path_to_config + name;
-  pugi::xml_document doc;
-  const pugi::xml_parse_result parsed = doc.load_file(docpath.c_str());
-  if (!parsed)
-    return true;
-
-  const pugi::xml_node ngram = doc.child("fts").child("ngram");
+bool Parser::set_data(const pugi::xml_document& d) {
+  const pugi::xml_node ngram = d.child("fts").child("ngram");
   min = ngram.attribute("min").as_uint();
   max = ngram.attribute("max").as_uint();
-
   const pugi::xml_node stop_words =
-      doc.child("fts").child("ngram").child("stop_words");
-
+      d.child("fts").child("ngram").child("stop_words");
   for (pugi::xml_node i : stop_words.children("word")) {
     stopwords.insert(i.text().as_string());
-    // std::cout << word.as_string() << "\n";
   }
   return false;
 }
 
 void Parser::print_config() const {
-  std::cout << "Ngram min: " << min << "\nNgram max: " << max
-            << "\nConfig: " << path_to_config << "\n";
+  std::cout << "Ngram min: " << min << "\nNgram max: " << max;
   for (str it : stopwords)
     std::cout << it << "\t";
   std::cout << "\n";

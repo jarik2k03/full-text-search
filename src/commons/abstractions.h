@@ -1,7 +1,12 @@
 #pragma once
+#ifndef ABSTRACTIONS_H
+#define ABSTRACTIONS_H
+
+#include <iostream>
+
 #define ASSERT(error, msg)                              \
   if (error == true) {                                  \
-    std::cout << "Критическая ошибка: " << msg << '\n'; \
+    std::cerr << "Критическая ошибка: " << msg << '\n'; \
     exit(-1);                                           \
   }
 
@@ -9,7 +14,12 @@
 
 #define EXCHANGE(from, to) to = std::exchange(from, 0);
 
+using std::begin;
+using std::end;
 using uint = unsigned int;
+using cint = const int;
 using cstr = const std::string;
 using str = std::string;
-using str_uset = std::unordered_set<str>;
+using std::make_pair;
+
+#endif

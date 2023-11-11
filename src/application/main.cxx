@@ -1,10 +1,10 @@
 #include <cxxopts.hpp>
-#include <pugixml.hpp>
-
-#include <iostream>
 
 #include <commons/abstractions.h>
-#include <commons/parser.h>
+#include <commons/configurator.h>
+#include <ft-indexer/indexer.h>
+#include <unistd.h>
+#include <iostream>
 
 using namespace cxxopts;
 
@@ -14,29 +14,43 @@ int main(int argc, char** argv) {
   if (argc == 1)
     return print_manual();
 
-  Options opt("FullTextSearch", "Okay, fts!");
-  opt.add_options()(
-      "config",
-      "XML user settings",
-      value<str>()->implicit_value("config.xml"))(
-      "request",
-      "Raw search request",
-      value<str>()->implicit_value("Wikipedia"));
+  try {
+    Options opt("FullTextSearch", "Okay, fts!");
+    opt.add_options()(
+        "config",
+        "XML user settings",
+        value<str>()->implicit_value("user/config.xml"))(
+        "book",
+        "Books database .csv name",
+        value<str>()->implicit_value("user/book.csv"))(
+        "index",
+        "folder to save the indexes from database",
+        value<str>()->implicit_value("user/indexed/"));
 
-  const ParseResult pr = opt.parse(argc, argv);
-  if (pr.count("config")) {
-    Parser user(pr["config"].as<str>());
-    if (pr.count("request")) {
-      str raw = pr["request"].as<str>();
-      const ParserResult user_parsed = user.parse(raw);
-      user_parsed.ngrams_traverse();
+    const ParseResult pr = opt.parse(argc, argv);
+    if (pr.count("config")) {
+      Configurator user_config(pr["config"].as<str>());
+      if (pr.count("book")) {
+        str book_name = pr["book"].as<str>();
+        cstr index_folder = pr["index"].as<str>();
+        IndexBuilder b(user_config.get_document(), book_name);
+        const InvertedResult ir = b.build_inverted();
+        if (pr.count("index")) {
+          IndexWriter* writer = new TextIndexWriter(user_config.get_document());
+          writer->write_common(b.loaded_document, index_folder);
+          writer->write_inverted(ir, index_folder);
+        }
+      }
     }
+  } catch (const option_exists_error& e) {
+    std::cout << "Error parsing options: " << e.what() << std::endl;
+    exit(1);
   }
   return 0;
 }
 
 int print_manual() {
   std::cout << "--config - пользовательские настройки (default:config.xml)\n"
-            << "--request - пользовательский запрос\n";
+            << "--book - проиндексировать базу книг\n";
   return 0;
 }

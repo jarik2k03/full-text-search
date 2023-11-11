@@ -39,4 +39,18 @@
         <word>with</word>
       </stop_words>
    </ngram>
+   <indexer part_length="3" hash_length="6">
+      <field>Book_ID</field>
+      <field>Title</field>
+      <field>Authors</field>
+      <field>Average_rating</field>
+      <field>ISBN</field>
+      <field>ISBN13</field>
+      <field>Language_Code</field>
+      <field>Num_pages</field>
+      <field>Ratings_count</field>
+      <field>Text_reviews_count</field>
+      <field>Publication_date</field>
+      <field>Publisher</field>
+   </indexer>
 </fts>
