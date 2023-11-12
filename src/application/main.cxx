@@ -33,12 +33,12 @@ int main(int argc, char** argv) {
       if (pr.count("book")) {
         str book_name = pr["book"].as<str>();
         cstr index_folder = pr["index"].as<str>();
-        IndexBuilder b(user_config.get_document(), book_name);
-        const InvertedResult ir = b.build_inverted();
+        IndexBuilder b(user_config.get_document());
+        const IndexerResult ir = b.build_all(book_name);
         if (pr.count("index")) {
           IndexWriter* writer = new TextIndexWriter(user_config.get_document());
-          writer->write_common(b.loaded_document, index_folder);
-          writer->write_inverted(ir, index_folder);
+          writer->write_all_forward(ir.first, index_folder);
+          writer->write_all_inverted(ir.second, index_folder);
         }
       }
     }

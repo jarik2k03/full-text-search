@@ -1,14 +1,14 @@
 #include "parser.h"
 
 Parser::Parser(const pugi::xml_document& d) {
-  ASSERT(set_data(d), "Не удалось найти конфиг");
+  ASSERT(set_data_from_config(d), "Не удалось найти конфиг");
 }
 
 Parser::Parser(const str_uset& _set, uint _min, uint _max)
     : stopwords(_set), min(_min), max(_max) {
 }
 
-bool Parser::set_data(const pugi::xml_document& d) {
+bool Parser::set_data_from_config(const pugi::xml_document& d) {
   const pugi::xml_node ngram = d.child("fts").child("ngram");
   min = ngram.attribute("min").as_uint();
   max = ngram.attribute("max").as_uint();

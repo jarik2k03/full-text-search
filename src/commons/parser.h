@@ -50,7 +50,7 @@ class Parser {
   uint get_max_len() const {
     return max;
   }
-  bool set_data(const pugi::xml_document& d);
+  bool set_data_from_config(const pugi::xml_document& d);
   void print_config() const;
   ParserResult parse(str& raw_str);
 };
