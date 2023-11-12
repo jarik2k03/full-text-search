@@ -20,7 +20,7 @@ IndexerResult IndexBuilder::build_all(std::vector<str>& ram_book) noexcept {
   return make_pair(fm,im);
 }
 
-forwardmap IndexBuilder::build_all_forward(std::vector<str>& ram_book) {
+forwardmap IndexBuilder::build_all_forward(std::vector<str>& ram_book) noexcept {
   forwardmap new_index;
   str line = ram_book.at(0);
   int count = 0;
@@ -33,7 +33,7 @@ forwardmap IndexBuilder::build_all_forward(std::vector<str>& ram_book) {
   }
   return new_index;
 }
-forwardmap IndexBuilder::build_all_forward(cstr& book_name) {
+forwardmap IndexBuilder::build_all_forward(cstr& book_name) noexcept {
   std::ifstream book(book_name);
   ASSERT(!book, "Не найдена база книг для индексации!");
   forwardmap new_index;
@@ -52,7 +52,7 @@ forwardmap IndexBuilder::build_all_forward(cstr& book_name) {
   return new_index;
 }
 
-bool IndexBuilder::build_forward(forwardmap& doc, str& line) {
+bool IndexBuilder::build_forward(forwardmap& doc, str& line) noexcept {
   auto it = book_tags.begin();
   auto delim = line.find_first_of(',');
   str bufstr = {0};
@@ -71,7 +71,7 @@ bool IndexBuilder::build_forward(forwardmap& doc, str& line) {
   doc.insert({id, pd});
   return false;
 }
-bool IndexBuilder::set_data_from_config(const pugi::xml_document& d) {
+bool IndexBuilder::set_data_from_config(const pugi::xml_document& d) noexcept {
   const pugi::xml_node indexer = d.child("fts").child("indexer");
   int count = 0;
   for (pugi::xml_node i : indexer.children("field")) {
@@ -83,11 +83,11 @@ bool IndexBuilder::set_data_from_config(const pugi::xml_document& d) {
   }
   return false;
 }
-void IndexBuilder::print_index_properties() const {
+void IndexBuilder::print_index_properties() const noexcept{
   for (const auto& [key, pos] : book_tags)
     std::cout << "Book tag: " << key << "; Position: " << pos << '\n';
 }
-void IndexBuilder::print_documents(const forwardmap& fi) const {
+void IndexBuilder::print_documents(const forwardmap& fi) const noexcept{
   for (const auto& [id, pd] : fi) {
     std::cout << "\n[" << id << "] ~ ";
     for (const auto tag : pd) {
@@ -96,7 +96,7 @@ void IndexBuilder::print_documents(const forwardmap& fi) const {
   }
 }
 
-invertedmaps IndexBuilder::build_all_inverted(const forwardmap& external) {
+invertedmaps IndexBuilder::build_all_inverted(const forwardmap& external) noexcept {
   invertedmaps new_ir;
   invertedmap imap;
   // пре-инициализация индексных деревьев для каждого атрибута
@@ -128,7 +128,7 @@ void IndexBuilder::build_inverted(
     invertedmap& imap,
     const std::pair<cstr, uint8_t>& ng,
     const int row,
-    const int cur_id) const {
+    const int cur_id) const noexcept {
   auto node = imap.find(ng.first);
   if (node == imap.end()) {
     InvertedIndex new_node;
@@ -149,7 +149,7 @@ void IndexBuilder::build_inverted(
   }
 }
 
-bool IndexBuilder::check_eq_tags(cstr& line, short pos) const {
+bool IndexBuilder::check_eq_tags(cstr& line, short pos) const noexcept{
   const auto& it = book_tags.begin() + pos - 1;
   if (it->first != line && it->second != -1)
     return true;
@@ -163,7 +163,7 @@ TextIndexWriter::TextIndexWriter(const booktagsvector& bt, cint p_l, cint h_l)
     : book_tags(bt), part_length(p_l), hash_length(h_l) {
 }
 
-bool TextIndexWriter::set_data_from_config(const pugi::xml_document& d) {
+bool TextIndexWriter::set_data_from_config(const pugi::xml_document& d) noexcept {
   const pugi::xml_node indexer = d.child("fts").child("indexer");
   part_length = indexer.attribute("part_length").as_int();
   hash_length = indexer.attribute("hash_length").as_int();
@@ -178,11 +178,11 @@ bool TextIndexWriter::set_data_from_config(const pugi::xml_document& d) {
   return false;
 }
 
-str TextIndexWriter::name_to_hash(cstr& name) const {
+str TextIndexWriter::name_to_hash(cstr& name) const noexcept{
   return picosha2::hash256_hex_string(name).substr(0, hash_length);
 }
 void TextIndexWriter::write_all_forward(const forwardmap& docindex, cstr& path)
-    const {
+    const noexcept {
   ASSERT(docindex.empty(), "БД книг не найдена. Невозможна запись!");
   std::ofstream doc;
   create_folder(path);
@@ -198,7 +198,7 @@ void TextIndexWriter::write_all_forward(const forwardmap& docindex, cstr& path)
 
 void TextIndexWriter::write_forward(
     const forwardIndex& data,
-    std::ofstream& file) const {
+    std::ofstream& file) const noexcept{
   for (const auto attr : data) {
     file << attr << '\n';
   }
@@ -206,7 +206,7 @@ void TextIndexWriter::write_forward(
 
 void TextIndexWriter::write_all_inverted(
     const invertedmaps& indexresult,
-    cstr& path) const {
+    cstr& path) const noexcept{
   ASSERT(
       indexresult.full_index.empty(), "БД книг не найдена. Невозможна запись!");
   cstr entrpath = path + "/entries/";
@@ -234,7 +234,7 @@ void TextIndexWriter::write_all_inverted(
 void TextIndexWriter::write_inverted(
     cstr& ngram,
     const InvertedIndex& cur,
-    std::ofstream& file) const {
+    std::ofstream& file) const noexcept{
   std::stringstream buffer;
 
   buffer << ngram << " " << cur.doc_count << " ";
