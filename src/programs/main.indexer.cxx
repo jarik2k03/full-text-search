@@ -1,6 +1,6 @@
 #include <cxxopts.hpp>
 
-#include <commons/abstractions.h>
+#include <commons/_abstractions.h>
 #include <commons/configurator.h>
 #include <ft-indexer/indexer.h>
 #include <unistd.h>
@@ -33,12 +33,15 @@ int main(int argc, char** argv) {
       if (pr.count("book")) {
         str book_name = pr["book"].as<str>();
         cstr index_folder = pr["index"].as<str>();
-        IndexBuilder b(user_config.get_document());
+        IndexBuilder b(user_config.get_builder_opts().words);
         const IndexerResult ir = b.build_all(book_name);
         if (pr.count("index")) {
-          IndexWriter* writer = new TextIndexWriter(user_config.get_document());
+          IndexWriter* writer = new TextIndexWriter(
+              user_config.get_builder_opts().words,
+              user_config.get_writer_opts());
           writer->write_all_forward(ir.first, index_folder);
           writer->write_all_inverted(ir.second, index_folder);
+          delete writer;
         }
       }
     }

@@ -1,30 +1,12 @@
 #include "parser.h"
 
-Parser::Parser(const pugi::xml_document& d) {
-  ASSERT(set_data_from_config(d), "Не удалось найти конфиг");
+Parser::Parser(const ParserOpts& po) : options(po) {
 }
 
-Parser::Parser(const str_uset& _set, uint _min, uint _max)
-    : stopwords(_set), min(_min), max(_max) {
-}
-
-bool Parser::set_data_from_config(const pugi::xml_document& d) {
-  const pugi::xml_node ngram = d.child("fts").child("ngram");
-  min = ngram.attribute("min").as_uint();
-  max = ngram.attribute("max").as_uint();
-  const pugi::xml_node stop_words =
-      d.child("fts").child("ngram").child("stop_words");
-  for (pugi::xml_node i : stop_words.children("word")) {
-    stopwords.insert(i.text().as_string());
-  }
-  return false;
-}
-
-void Parser::print_config() const {
-  std::cout << "Ngram min: " << min << "\nNgram max: " << max;
-  for (str it : stopwords)
-    std::cout << it << "\t";
-  std::cout << "\n";
+Parser::Parser(const str_uset& _set, uint _min, uint _max) {
+  options.max_length = _max;
+  options.min_length = _min;
+  options.stopwords = _set;
 }
 
 ParserResult Parser::parse(str& raw_str) {
@@ -39,12 +21,13 @@ ParserResult Parser::parse(str& raw_str) {
 
   while (ss >> s) {
     int size = s.size();
-    for (int i = min; i <= size && i <= max; ++i) {
+    for (int i = options.min_length; i <= size && i <= options.max_length;
+         ++i) {
       str part_s(s, 0, i);
       pr.ngrams.insert({part_s, count});
     }
     pr.positions_count = count;
-    if (size >= min)
+    if (size >= options.min_length)
       ++count;
   }
 
@@ -62,8 +45,8 @@ void Parser::exclude_stop_words(str& raw_str) const {
   uint index = 0;
 
   while (ss >> current) {
-    auto it = stopwords.find(current);
-    if (it == stopwords.end()) {
+    auto it = options.stopwords.find(current);
+    if (it == options.stopwords.end()) {
       index += current.length() + 1;
       continue;
     }
