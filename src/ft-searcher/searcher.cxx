@@ -20,6 +20,12 @@ InvertedIndex TextIndexAccessor::access_inverted(cstr& ngram) const noexcept {
   std::ifstream found_fileset(index_path + hash_name);
   ASSERT(found_fileset.bad(), "Не найден файл с нужными нграммами");
 
+  str line;
+  while (std::getline(found_fileset, line)) {
+    cstr found_ngram = line.substr(0, ngram.size());
+    
+  }
+
   InvertedIndex entry;
   return entry;
 }
