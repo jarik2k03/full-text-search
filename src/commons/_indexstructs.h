@@ -43,6 +43,7 @@ using forwardIndex = std::vector<str>;
 using forwardmap = std::map<str, forwardIndex>; // ключ - docID
 using invertedmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
+using forwardmaps = std::vector<forwardmap>;
 using invertedmaps = std::vector<invertedmap>;
 using IndexerResult = std::pair<forwardmap, invertedmaps>;
 

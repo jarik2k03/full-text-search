@@ -1,6 +1,6 @@
 #pragma once
-#ifndef INDEXER_H
-#define INDEXER_H
+#ifndef SEARCHER_H
+#define SEARCHER_H
 
 #include <commons/_indexstructs.h>
 #include <commons/parser.h>
@@ -11,37 +11,54 @@
 #include <unistd.h>
 #include <filesystem>
 #include <fstream>
+#include <set>
+
+using searched = std::vector<std::pair<InvertedIndex, forwardmap>>;
 
 class IndexAccessor {
- private:
-  virtual InvertedIndex access_inverted(cstr& ngram) const noexcept = 0;
-  virtual forwardmap access_all_forward(int id) const noexcept = 0;
-
  public:
   virtual ~IndexAccessor() = default;
+  virtual InvertedIndex access_inverted(cstr& ngram, cstr& attr_name) const noexcept = 0;
+  virtual forwardmap access_all_forward(InvertedIndex& ii) const noexcept = 0;
 };
 
 class TextIndexAccessor : public IndexAccessor {
  private:
   IdxWriterOpts w_opts;
+  IdxBuilderOpts b_opts;
   ParserOpts p_opts;
   str index_path;
 
-  InvertedIndex access_inverted(cstr& ngram) const noexcept override;
-  forwardmap access_all_forward(int id) const noexcept override;
   str name_to_hash(cstr& name) const noexcept;
 
  public:
-  TextIndexAccessor(const ParserOpts& po, const IdxWriterOpts& iwo, cstr& ip);
+  TextIndexAccessor(
+      const ParserOpts& po,
+      const IdxWriterOpts& iwo,
+      const IdxBuilderOpts& ibo,
+      cstr& ip);
+  InvertedIndex access_inverted(cstr& ngram, cstr& attr_name) const noexcept override;
+  forwardmap access_all_forward(InvertedIndex& ii) const noexcept override;
 
   str& get_index_path() {
     return index_path;
   }
+  ParserOpts& get_p_opts() {
+    return p_opts;
+  }
 };
 
 class IndexProcessor {
+ private:
+  std::map<str, str> search_attrs;
+  Parser parser;
+
  public:
-  void search(cstr& request, const IndexAccessor* access);
+  IndexProcessor(const ParserOpts& po);
+  void add_attribute(cstr& attr);
+  int remove_attribute(cstr& attr);
+  std::map<str,str>& get_attributes();
+  void search(IndexAccessor* access);
 };
 
 #endif
