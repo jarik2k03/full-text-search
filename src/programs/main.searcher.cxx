@@ -4,7 +4,7 @@
 #include <commons/_abstractions.h>
 #include <commons/configurator.h>
 #include <ft-searcher/searcher.h>
-#include <unistd.h> 
+#include <unistd.h>
 #include <iostream>
 
 int print_manual();
@@ -12,7 +12,7 @@ int print_manual();
 bool process_command(
     cstr& cmd,
     IndexProcessor& searcher,
-    IndexAccessor* accessor,
+    TextIndexAccessor& accessor,
     replxx::Replxx& t) {
   std::stringstream ss(cmd);
   str line;
@@ -43,7 +43,7 @@ bool process_command(
 void launch_interactive_mode(Configurator& config, cstr& indexpath) {
   replxx::Replxx terminal;
   IndexProcessor processor(config.get_parser_opts());
-  IndexAccessor* accessor = new TextIndexAccessor(
+  TextIndexAccessor accessor(
       config.get_parser_opts(),
       config.get_writer_opts(),
       config.get_builder_opts(),
@@ -54,12 +54,9 @@ void launch_interactive_mode(Configurator& config, cstr& indexpath) {
     str command = terminal.input("(fts) ");
     if (!process_command(command, processor, accessor, terminal))
       break;
-
-    // terminal.history_add(request);
-    // processor.search(request, accessor);
+    std::cout << std::endl;
   }
   terminal.history_save("user/.request_history");
-  delete accessor;
 }
 int main(int argc, char** argv) {
   if (argc == 1)

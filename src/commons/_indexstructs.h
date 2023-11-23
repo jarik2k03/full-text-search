@@ -20,9 +20,9 @@ struct InvertedIndex {
       ntoken.emplace_back(tk);
     }
     void print_format() const {
-      std::cout << " " << pos_count;
+      std::cout << " " << pos_count << ";";
       for (auto i : ntoken)
-        std::cout << " " << i;
+        std::cout << " " << +i;
     }
   };
   int doc_count;
