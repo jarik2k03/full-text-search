@@ -1,16 +1,42 @@
 #include "searcher.h"
 
 void IndexProcessor::search(TextIndexAccessor& access) {
-  searched res;
-
   access_all_docs_dat(access.get_index_path());
   // поиск обратного индекса для всех атрибутов
   for (auto& [attr, request] : search_attrs) {
     const ParserResult pr = parser.parse(request);
-    for (const auto& i : pr.ngrams) {
-      InvertedIndex entry = access.access_inverted(i.first, attr);
-      forwardmap docs = access.access_forward(entry);
+    invertedmap entries = access.access_inverted(pr, attr);
+    scoremap docs = access.access_forward(entries);
+    calc_score(pr, docs, entries);
+    print_results(docs);
+  }
+}
+
+void IndexProcessor::print_results(scoremap& map) const noexcept {
+  uint counter = 0;
+  std::cout << "N\tRating\tBookID\tTitle\n";
+  for (const auto& [id, title] : map) {
+    if (title.second > 0)
+      std::cout << ++counter << '\t' << title.second << '\t' << id << '\t'
+                << title.first.at(0) << '\n';
+  }
+}
+
+void IndexProcessor::calc_score(
+    const ParserResult& pr,
+    scoremap& docs,
+    const invertedmap& entries) {
+  double score = 0.0;
+  for (const auto& [id, title] : docs) {
+    for (const auto& [ngram, p] : pr.ngrams) {
+      InvertedIndex ii = entries.find(ngram)->second;
+      const double dfreq = df(ngram, ii);
+      if (dfreq == 0)
+        continue;
+      const double tfreq = tf(ngram, id, ii);
+      // const double idf = log();
     }
+
   }
 }
 
@@ -37,46 +63,59 @@ TextIndexAccessor::TextIndexAccessor(
     : p_opts(po), w_opts(iwo), b_opts(ibo), index_path(ip) {
 }
 
-forwardmap TextIndexAccessor::access_forward(InvertedIndex& ii) const noexcept {
-  forwardmap docs;
+scoremap TextIndexAccessor::access_forward(invertedmap& im) const noexcept {
+  scoremap docs;
 
   std::ifstream found_document;
-  for (const auto& [id, entries] : ii.map) {
-    cstr s_id = std::to_string(id);
-    cstr docpath = index_path + "docs/";
-    cstr index_docpath = docpath + s_id;
-    found_document.open(index_docpath + ".page");
-    ASSERT(found_document.bad(), "Не найден документ");
-    // while (std::getline())
-    // {
-    //   /* code */
-    // }
+  for (const auto& [id, ii] : im) {
+    for (const auto& [id, entries] : ii.map) {
+      cstr s_id = std::to_string(id);
+      cstr docpath = index_path + "docs/";
+      cstr index_docpath = docpath + s_id;
+      found_document.open(index_docpath + ".page");
+      ASSERT(found_document.bad(), "Не найден документ");
+      docs.insert({id, make_pair(read_forward(found_document), 0.0)});
+      found_document.close();
+    }
   }
 
   return docs;
 }
-InvertedIndex TextIndexAccessor::access_inverted(cstr& ngram, cstr& attr_name)
-    const noexcept {
-  cstr part_ngram(ngram, 0, w_opts.part_length);
-  cstr hash_name = name_to_hash(part_ngram);
-  std::cout << hash_name << '\n';
-  cstr entrpath = index_path + "entries/";
-  cstr entr_attr_path = entrpath + attr_name + "/";
-  std::ifstream found_fileset(entr_attr_path + hash_name);
-  if (!found_fileset.is_open())
-    return InvertedIndex();
-  std::cout << entr_attr_path + hash_name << "\n";
+invertedmap TextIndexAccessor::access_inverted(
+    const ParserResult& ngrams,
+    cstr& attr_name) const noexcept {
+  invertedmap imap;
+  for (const auto& ngram : ngrams.ngrams) {
+    cstr part_ngram(ngram.first, 0, w_opts.part_length);
+    cstr hash_name = name_to_hash(part_ngram);
+    // std::cout << hash_name << '\n';
+    cstr entrpath = index_path + "entries/";
+    cstr entr_attr_path = entrpath + attr_name + "/";
+    std::ifstream found_fileset(entr_attr_path + hash_name);
+    if (!found_fileset.is_open())
+      return imap;
+    // std::cout << entr_attr_path + hash_name << "\n";
 
-  str line;
-  while (std::getline(found_fileset, line)) {
-    cstr found_ngram = line.substr(0, line.find_first_of(' '));
-    if (found_ngram == ngram)
-      goto fill;
+    str line;
+    while (std::getline(found_fileset, line)) {
+      cstr found_ngram = line.substr(0, line.find_first_of(' '));
+      if (found_ngram == ngram.first) {
+        imap.insert({found_ngram, read_inverted(line)});
+        break;
+      }
+    }
   }
-  return InvertedIndex();
+  return imap;
+}
 
-fill:
-  return read_inverted(line);
+forwardIndex TextIndexAccessor::read_forward(
+    std::ifstream& fin) const noexcept {
+  forwardIndex doc;
+  str line;
+  while (std::getline(fin, line)) {
+    doc.emplace_back(line);
+  }
+  return doc;
 }
 
 InvertedIndex TextIndexAccessor::read_inverted(cstr& line) const noexcept {
@@ -102,18 +141,18 @@ InvertedIndex TextIndexAccessor::read_inverted(cstr& line) const noexcept {
 }
 
 bool IndexProcessor::access_all_docs_dat(cstr& idx_path) noexcept {
-      std::ifstream all_docs_dat(idx_path + "all_docs.dat");
-    if (!all_docs_dat)
-      return true;
-    all_docs_dat >> all_docs;
-    return false;
+  std::ifstream all_docs_dat(idx_path + "all_docs.dat");
+  if (!all_docs_dat)
+    return true;
+  all_docs_dat >> all_docs;
+  return false;
 }
 
 uint tf(cstr& term, int document_id, InvertedIndex& cur) {
   auto entry = cur.map.find(document_id);
-  if (entry == cur.map.end()) 
+  if (entry == cur.map.end())
     return 0;
-  return entry->second.pos_count; 
+  return entry->second.pos_count;
 }
 
 uint df(cstr& term, InvertedIndex& cur) {

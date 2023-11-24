@@ -38,9 +38,12 @@ struct InvertedIndex {
       i.second.print_format();
   }
 };
+
 using forwardIndex = std::vector<str>;
 
 using forwardmap = std::map<str, forwardIndex>; // ключ - docID
+using scoremap =
+    std::map<uint, std::pair<forwardIndex, double>>; // расширенный forwardmap
 using invertedmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
 using forwardmaps = std::vector<forwardmap>;
