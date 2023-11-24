@@ -32,7 +32,7 @@ class IndexWriter {
 
 class TextIndexWriter : public IndexWriter {
  private:
-  void write_forward(const  forwardIndex& data, std::ofstream& file)
+  void write_forward(const forwardIndex& data, std::ofstream& file)
       const noexcept override;
   void write_inverted(
       cstr& ngram,

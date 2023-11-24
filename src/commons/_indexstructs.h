@@ -40,10 +40,15 @@ struct InvertedIndex {
 };
 
 using forwardIndex = std::vector<str>;
-
+struct scoredoc {
+  uint id;
+  forwardIndex document;
+  double score;
+  scoredoc(uint i, forwardIndex d, double s) : id(i), document(d), score(s) {
+  }
+};
 using forwardmap = std::map<str, forwardIndex>; // ключ - docID
-using scoremap =
-    std::map<uint, std::pair<forwardIndex, double>>; // расширенный forwardmap
+using scoredocs = std::vector<scoredoc>; // расширенный forwardmap
 using invertedmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
 using forwardmaps = std::vector<forwardmap>;

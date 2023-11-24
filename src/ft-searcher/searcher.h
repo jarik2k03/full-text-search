@@ -7,14 +7,12 @@
 
 #include <picosha2.h>
 
-#include <cmath>
 #include <time.h>
 #include <unistd.h>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <set>
-
-using searched = std::vector<std::pair<InvertedIndex, forwardmap>>;
 
 class IndexAccessor {
  public:
@@ -22,7 +20,7 @@ class IndexAccessor {
   virtual invertedmap access_inverted(
       const ParserResult& ngrams,
       cstr& attr_name) const noexcept = 0;
-  virtual scoremap access_forward(invertedmap& im) const noexcept = 0;
+  virtual scoredocs access_forward(invertedmap& im) const noexcept = 0;
   virtual forwardIndex read_forward(std::ifstream& fin) const noexcept = 0;
   virtual InvertedIndex read_inverted(cstr& line) const noexcept = 0;
 };
@@ -43,7 +41,7 @@ class TextIndexAccessor : public IndexAccessor {
       cstr& ip);
   invertedmap access_inverted(const ParserResult& ngrams, cstr& attr_name)
       const noexcept override;
-  scoremap access_forward(invertedmap& im) const noexcept override;
+  scoredocs access_forward(invertedmap& im) const noexcept override;
   forwardIndex read_forward(std::ifstream& fin) const noexcept override;
   InvertedIndex read_inverted(cstr& line) const noexcept override;
 
@@ -58,7 +56,7 @@ class TextIndexAccessor : public IndexAccessor {
 class IndexProcessor {
  private:
   std::map<str, str> search_attrs;
-  scoremap doc_list;
+  scoredocs doc_list;
   Parser parser;
   int all_docs;
 
@@ -68,17 +66,23 @@ class IndexProcessor {
   int remove_attribute(cstr& attr);
   std::map<str, str>& get_attributes();
   bool access_all_docs_dat(cstr& idx_path) noexcept;
-  void print_results(scoremap& map) const noexcept;
+  void sort_print_results(scoredocs& vec, const int ncols = 20) const noexcept;
   void calc_score(
       const ParserResult& pr,
-      scoremap& docs,
+      scoredocs& docs,
       const invertedmap& entries);
   void search(TextIndexAccessor& access);
   int get_all_docs() const {
     return all_docs;
   }
-  scoremap get_doc_list() const {
+  void set_all_docs(int d) {
+    all_docs = d;
+  }
+  scoredocs get_doc_list() const {
     return doc_list;
+  }
+  Parser get_parser() const {
+    return parser;
   }
 };
 

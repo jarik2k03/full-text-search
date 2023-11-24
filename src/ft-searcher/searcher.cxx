@@ -6,37 +6,41 @@ void IndexProcessor::search(TextIndexAccessor& access) {
   for (auto& [attr, request] : search_attrs) {
     const ParserResult pr = parser.parse(request);
     invertedmap entries = access.access_inverted(pr, attr);
-    scoremap docs = access.access_forward(entries);
+    scoredocs docs = access.access_forward(entries);
     calc_score(pr, docs, entries);
-    print_results(docs);
+    sort_print_results(docs);
   }
 }
 
-void IndexProcessor::print_results(scoremap& map) const noexcept {
+void IndexProcessor::sort_print_results(scoredocs& vec, const int ncols)
+    const noexcept {
+  std::sort(vec.begin(), vec.end(), [](const scoredoc& _1, const scoredoc& _2) {
+    return _1.score > _2.score;
+  });
+
   uint counter = 0;
   std::cout << "N\tRating\tBookID\tTitle\n";
-  for (const auto& [id, title] : map) {
-    if (title.second > 0)
-      std::cout << ++counter << '\t' << title.second << '\t' << id << '\t'
-                << title.first.at(0) << '\n';
+  for (const auto& it : vec) {
+    if (counter < ncols)
+      std::cout << ++counter << '\t' << it.score << '\t' << it.id << '\t'
+                << it.document.at(0) << '\n';
   }
 }
 
 void IndexProcessor::calc_score(
     const ParserResult& pr,
-    scoremap& docs,
+    scoredocs& docs,
     const invertedmap& entries) {
-  double score = 0.0;
-  for (const auto& [id, title] : docs) {
+  for (auto& it : docs) {
     for (const auto& [ngram, p] : pr.ngrams) {
       InvertedIndex ii = entries.find(ngram)->second;
       const double dfreq = df(ngram, ii);
       if (dfreq == 0)
         continue;
-      const double tfreq = tf(ngram, id, ii);
-      // const double idf = log();
+      const double tfreq = tf(ngram, it.id, ii);
+      const double idf = log(static_cast<double>(all_docs) / dfreq);
+      it.score += tfreq * idf;
     }
-
   }
 }
 
@@ -63,19 +67,23 @@ TextIndexAccessor::TextIndexAccessor(
     : p_opts(po), w_opts(iwo), b_opts(ibo), index_path(ip) {
 }
 
-scoremap TextIndexAccessor::access_forward(invertedmap& im) const noexcept {
-  scoremap docs;
-
+scoredocs TextIndexAccessor::access_forward(invertedmap& im) const noexcept {
+  scoredocs docs;
+  std::set<int> used_docs;
   std::ifstream found_document;
   for (const auto& [id, ii] : im) {
     for (const auto& [id, entries] : ii.map) {
+      if (used_docs.find(id) != used_docs.end())
+        continue;
       cstr s_id = std::to_string(id);
       cstr docpath = index_path + "docs/";
       cstr index_docpath = docpath + s_id;
       found_document.open(index_docpath + ".page");
       ASSERT(found_document.bad(), "Не найден документ");
-      docs.insert({id, make_pair(read_forward(found_document), 0.0)});
+      scoredoc doc{static_cast<uint>(id), read_forward(found_document), 0.0};
+      docs.emplace_back(doc);
       found_document.close();
+      used_docs.insert(id);
     }
   }
 
@@ -85,18 +93,22 @@ invertedmap TextIndexAccessor::access_inverted(
     const ParserResult& ngrams,
     cstr& attr_name) const noexcept {
   invertedmap imap;
+
+  str prev_part_ngram;
+  std::ifstream found_fileset;
   for (const auto& ngram : ngrams.ngrams) {
     cstr part_ngram(ngram.first, 0, w_opts.part_length);
-    cstr hash_name = name_to_hash(part_ngram);
-    // std::cout << hash_name << '\n';
-    cstr entrpath = index_path + "entries/";
-    cstr entr_attr_path = entrpath + attr_name + "/";
-    std::ifstream found_fileset(entr_attr_path + hash_name);
-    if (!found_fileset.is_open())
-      return imap;
-    // std::cout << entr_attr_path + hash_name << "\n";
-
+    if (prev_part_ngram != part_ngram) {
+      found_fileset.close();
+      cstr hash_name = name_to_hash(part_ngram);
+      cstr entrpath = index_path + "entries/";
+      cstr entr_attr_path = entrpath + attr_name + "/";
+      found_fileset.open(entr_attr_path + hash_name);
+      if (!found_fileset.is_open())
+        return imap;
+    }
     str line;
+    found_fileset.seekg(0);
     while (std::getline(found_fileset, line)) {
       cstr found_ngram = line.substr(0, line.find_first_of(' '));
       if (found_ngram == ngram.first) {
@@ -104,6 +116,7 @@ invertedmap TextIndexAccessor::access_inverted(
         break;
       }
     }
+    prev_part_ngram = part_ngram;
   }
   return imap;
 }
