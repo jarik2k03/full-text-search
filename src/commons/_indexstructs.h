@@ -6,6 +6,7 @@
 #include <commons/_abstractions.h>
 #include <map>
 #include <vector>
+#include <cstdint>
 
 struct InvertedIndex {
   struct Entries {
