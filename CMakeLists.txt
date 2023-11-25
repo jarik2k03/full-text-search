@@ -22,7 +22,7 @@ endif()
 # if (NOT CLANG_FORMAT_EXE)
 #   message(WARNING "clang-format is not installed")
 # else()
-#   execute_process(COMMAND find src/ -iname *.h -o -iname *.cxx | xargs ${CLANG_FORMAT_EXE} -i) 
+#   execute_process(COMMAND find src/ -iname *.h -o -iname *.cxx | xargs clang-format -i) 
 #   message("formatting code...")
 # endif()
 

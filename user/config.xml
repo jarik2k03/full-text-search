@@ -42,15 +42,15 @@
    <indexer part_length="3" hash_length="6">
       <field>Book_ID</field>
       <field>Title</field>
-      <field>Authors</field>
-      <field>Average_rating</field>
-      <field>ISBN</field>
-      <field>ISBN13</field>
-      <field>Language_Code</field>
-      <field>Num_pages</field>
-      <field>Ratings_count</field>
-      <field>Text_reviews_count</field>
-      <field>Publication_date</field>
-      <field>Publisher</field>
+      <field ignore="true">Authors</field>
+      <field ignore="true">Average_rating</field>
+      <field ignore="true">ISBN</field>
+      <field ignore="true">ISBN13</field>
+      <field ignore="true">Language_Code</field>
+      <field ignore="true">Num_pages</field>
+      <field ignore="true">Ratings_count</field>
+      <field ignore="true">Text_reviews_count</field>
+      <field ignore="true">Publication_date</field>
+      <field ignore="true">Publisher</field>
    </indexer>
 </fts>

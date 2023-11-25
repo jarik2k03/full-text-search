@@ -7,15 +7,16 @@ static std::vector<str> main_csv = {
     "14,Princess on tiny pea,12",
     "917,Fix price work manual,3"};
 
-GTEST_TEST(indexer, build_common_index) {
+GTEST_TEST(indexer, build_forward_index) {
   IndexBuilder ib({{"bookId", 0}, {"title", 1}, {"id", 2}});
-  const commonmap index = ib.build_common(main_csv);
-  const commonmap expected = {
+  const auto index = ib.build_all(main_csv);
+  const forwardmap expected = {
       {"3", {"Harry Potter and Half blood prince", "2"}},
       {"14", {"Princess on tiny pea", "12"}},
       {"917", {"Fix price work manual", "3"}}};
-  auto i = index.begin(), e = expected.begin();
-  while (i != index.end() && e != expected.end()) {
+
+  auto i = index.first.begin(), e = expected.begin();
+  while (i != index.first.end() && e != expected.end()) {
     ASSERT_STREQ(i->first.c_str(), e->first.c_str());
     ASSERT_TRUE((i->second == e->second) ? true : false);
     ++i, ++e;
@@ -24,9 +25,8 @@ GTEST_TEST(indexer, build_common_index) {
 
 GTEST_TEST(indexer, build_inverted_index) {
   IndexBuilder ib({{"bookId", 0}, {"title", 1}, {"id", 2}});
-  const commonmap index = ib.build_common(main_csv);
-  const InvertedResult ir = ib.build_inverted(index);
-  const invertedmap& iindex = ir.full_index.at(0);
+  const auto ir = ib.build_all(main_csv);
+  const invertedmap& iindex = ir.second.at(0);
   const invertedmap iexpected = {
       {"har", {1, {{3, {1, {0}}}}}},
       {"harr", {1, {{3, {1, {0}}}}}},
