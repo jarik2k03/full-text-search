@@ -4,9 +4,9 @@
 #define INDEXSTRUCTS_H
 
 #include <commons/_abstractions.h>
+#include <cstdint>
 #include <map>
 #include <vector>
-#include <cstdint>
 
 struct InvertedIndex {
   struct Entries {
