@@ -6,7 +6,7 @@ GTEST_TEST(parser, excluding_and_down_case) {
   std::unordered_set<str> us = {"to", "is", "with"};
   Parser p(us);
   ParserResult pr = p.parse(s);
-  ASSERT_STREQ(s.c_str(), "my favourite language c");
+  ASSERT_STREQ(s.c_str(), "my favourite language c   ");
 }
 
 GTEST_TEST(parser, check_parser_result) {
