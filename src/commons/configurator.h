@@ -20,6 +20,11 @@ struct IdxBuilderOpts {
   booktagsvector words;
 };
 
+struct SearchState {
+  str _title_request;
+  std::map<str, str> _search_attrs;
+};
+
 class Configurator {
  private:
   pugi::xml_document userconfig;
@@ -30,17 +35,18 @@ class Configurator {
  public:
   Configurator();
   Configurator(cstr& path_to_config);
+  SearchState get_request_from_doc(cstr& filename);
 
   pugi::xml_document& get_document() {
     return userconfig;
   }
-  IdxBuilderOpts& get_builder_opts() {
+  IdxBuilderOpts get_builder_opts() const {
     return builder;
   }
-  IdxWriterOpts& get_writer_opts() {
+  IdxWriterOpts get_writer_opts() const {
     return writer;
   }
-  ParserOpts& get_parser_opts() {
+  ParserOpts get_parser_opts() const {
     return parser;
   }
 };

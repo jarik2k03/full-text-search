@@ -4,7 +4,6 @@
 #define INDEXSTRUCTS_H
 
 #include <commons/_abstractions.h>
-#include <cstdint>
 #include <map>
 #include <vector>
 
@@ -21,9 +20,10 @@ struct InvertedIndex {
       ntoken.emplace_back(tk);
     }
     void print_format() const {
-      std::cout << " " << pos_count << ";";
+      std::cout << " " << pos_count;
       for (auto i : ntoken)
         std::cout << " " << +i;
+      std::cout << '|';
     }
   };
   int doc_count;
@@ -42,14 +42,16 @@ struct InvertedIndex {
 
 using forwardIndex = std::vector<str>;
 struct scoredoc {
-  uint id;
   forwardIndex document;
   double score;
-  scoredoc(uint i, forwardIndex d, double s) : id(i), document(d), score(s) {
+  scoredoc(forwardIndex d, double s) : document(d), score(s) {
   }
 };
 using forwardmap = std::map<str, forwardIndex>; // ключ - docID
-using scoredocs = std::vector<scoredoc>; // расширенный forwardmap
+using scoremap = std::map<uint, double>; // ключ - docID
+using scoreforwardmap = std::map<uint, scoredoc>; // ключ - docID
+using scoredocs =
+    std::vector<std::pair<uint, scoredoc>>; // расширенный forwardmap
 using invertedmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
 using forwardmaps = std::vector<forwardmap>;

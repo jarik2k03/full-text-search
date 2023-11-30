@@ -1,45 +1,88 @@
 #include "searcher.h"
 
-void IndexProcessor::search(TextIndexAccessor& access) {
+void IndexProcessor::search(TextIndexAccessor& access, str& title_request) {
   access_all_docs_dat(access.get_index_path());
   // поиск обратного индекса для всех атрибутов
+  const ParserResult pr = parser.parse(title_request);
+  invertedmap entries = access.access_inverted(pr, "Title");
+  doc_list = access.access_forward(entries);
+  calc_score(pr, entries);
+
   for (auto& [attr, request] : search_attrs) {
     const ParserResult pr = parser.parse(request);
-    invertedmap entries = access.access_inverted(pr, attr);
-    scoredocs docs = access.access_forward(entries);
-    calc_score(pr, docs, entries);
-    sort_print_results(docs);
+    const invertedmap entr = access.access_inverted(pr, attr);
+    scoremap docIDmap = access.access_id(entr);
+
+    calc_score(pr, docIDmap, entr);
+    summ_score(docIDmap);
   }
+  sort_print_results(0);
 }
 
-void IndexProcessor::sort_print_results(scoredocs& vec, const int ncols)
-    const noexcept {
-  std::sort(vec.begin(), vec.end(), [](const scoredoc& _1, const scoredoc& _2) {
-    return _1.score > _2.score;
-  });
+void IndexProcessor::sort_print_results(cint row, cint ncols) const noexcept {
+  scoredocs res(doc_list.begin(), doc_list.end());
+
+  std::sort(
+      res.begin(),
+      res.end(),
+      [](const std::pair<uint, scoredoc>& _1,
+         const std::pair<uint, scoredoc>& _2) {
+        return _1.second.score > _2.second.score;
+      });
 
   uint counter = 0;
   std::cout << "N\tRating\tBookID\tTitle\n";
-  for (const auto& it : vec) {
+  for (const auto& [id, doc] : res) {
     if (counter < ncols)
-      std::cout << ++counter << '\t' << it.score << '\t' << it.id << '\t'
-                << it.document.at(0) << '\n';
+      std::cout << ++counter << '\t' << doc.score << '\t' << id << '\t'
+                << doc.document.at(row) << '\n';
+  }
+}
+
+void IndexProcessor::summ_score(scoremap& doc_ids) {
+  for (auto& [id, score] : doc_ids) {
+    auto doc_node = doc_list.find(id);
+    if (doc_node != doc_list.end()) {
+      doc_node->second.score += score;
+    }
   }
 }
 
 void IndexProcessor::calc_score(
     const ParserResult& pr,
-    scoredocs& docs,
     const invertedmap& entries) {
-  for (auto& it : docs) {
+  for (auto& [id, docs] : doc_list) {
     for (const auto& [ngram, p] : pr.ngrams) {
-      InvertedIndex ii = entries.find(ngram)->second;
+      auto iter = entries.find(ngram);
+      if (iter == entries.end())
+        continue;
+      InvertedIndex ii = iter->second;
       const double dfreq = df(ngram, ii);
       if (dfreq == 0)
         continue;
-      const double tfreq = tf(ngram, it.id, ii);
+      const double tfreq = tf(ngram, id, ii);
       const double idf = log(static_cast<double>(all_docs) / dfreq);
-      it.score += tfreq * idf;
+      docs.score += tfreq * idf;
+    }
+  }
+}
+
+void IndexProcessor::calc_score(
+    const ParserResult& pr,
+    scoremap& docs,
+    const invertedmap& entries) {
+  for (auto& [id, docs] : docs) {
+    for (const auto& [ngram, p] : pr.ngrams) {
+      auto iter = entries.find(ngram);
+      if (iter == entries.end())
+        continue;
+      InvertedIndex ii = iter->second;
+      const double dfreq = df(ngram, ii);
+      if (dfreq == 0)
+        continue;
+      const double tfreq = tf(ngram, id, ii);
+      const double idf = log(static_cast<double>(all_docs) / dfreq);
+      docs += tfreq * idf;
     }
   }
 }
@@ -56,39 +99,50 @@ std::map<str, str>& IndexProcessor::get_attributes() {
 }
 
 IndexProcessor::IndexProcessor(const ParserOpts& po) : parser(po) {
-  add_attribute("Title"); // атрибут по умолчанию
 }
 
-TextIndexAccessor::TextIndexAccessor(
-    const ParserOpts& po,
-    const IdxWriterOpts& iwo,
-    const IdxBuilderOpts& ibo,
-    cstr& ip)
-    : p_opts(po), w_opts(iwo), b_opts(ibo), index_path(ip) {
+IndexProcessor::IndexProcessor(const ParserOpts& po, const SearchState& s)
+    : parser(po), search_attrs(s._search_attrs) {
 }
 
-scoredocs TextIndexAccessor::access_forward(invertedmap& im) const noexcept {
-  scoredocs docs;
-  std::set<int> used_docs;
+TextIndexAccessor::TextIndexAccessor(const Configurator& c, cstr& ip)
+    : p_opts(c.get_parser_opts()),
+      w_opts(c.get_writer_opts()),
+      b_opts(c.get_builder_opts()),
+      index_path(ip) {
+}
+
+scoreforwardmap TextIndexAccessor::access_forward(
+    const invertedmap& im) const noexcept {
+  scoreforwardmap docs;
   std::ifstream found_document;
   for (const auto& [id, ii] : im) {
     for (const auto& [id, entries] : ii.map) {
-      if (used_docs.find(id) != used_docs.end())
-        continue;
       cstr s_id = std::to_string(id);
       cstr docpath = index_path + "docs/";
       cstr index_docpath = docpath + s_id;
       found_document.open(index_docpath + ".page");
       ASSERT(found_document.bad(), "Не найден документ");
-      scoredoc doc{static_cast<uint>(id), read_forward(found_document), 0.0};
-      docs.emplace_back(doc);
+      scoredoc doc{read_forward(found_document), 0.0};
+      docs.insert({static_cast<uint>(id), doc});
       found_document.close();
-      used_docs.insert(id);
     }
   }
 
   return docs;
 }
+
+scoremap TextIndexAccessor::access_id(const invertedmap& im) const noexcept {
+  scoremap docs;
+  for (const auto& [id, ii] : im) {
+    for (const auto& [id, entries] : ii.map) {
+      docs.insert({static_cast<uint>(id), 0.0});
+    }
+  }
+
+  return docs;
+}
+
 invertedmap TextIndexAccessor::access_inverted(
     const ParserResult& ngrams,
     cstr& attr_name) const noexcept {
@@ -96,6 +150,7 @@ invertedmap TextIndexAccessor::access_inverted(
 
   str prev_part_ngram;
   std::ifstream found_fileset;
+
   for (const auto& ngram : ngrams.ngrams) {
     cstr part_ngram(ngram.first, 0, w_opts.part_length);
     if (prev_part_ngram != part_ngram) {
@@ -104,8 +159,9 @@ invertedmap TextIndexAccessor::access_inverted(
       cstr entrpath = index_path + "entries/";
       cstr entr_attr_path = entrpath + attr_name + "/";
       found_fileset.open(entr_attr_path + hash_name);
-      if (!found_fileset.is_open())
+      if (!found_fileset.is_open()) {
         return imap;
+      }
     }
     str line;
     found_fileset.seekg(0);

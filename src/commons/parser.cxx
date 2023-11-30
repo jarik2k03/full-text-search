@@ -35,8 +35,7 @@ ParserResult Parser::parse(str& raw_str) {
 }
 
 void Parser::exclude_punct(str& raw_str) const {
-  const auto it = std::remove_if(raw_str.begin(), raw_str.end(), ::ispunct);
-  raw_str.erase(it, raw_str.end());
+  std::replace_if(raw_str.begin(), raw_str.end(), ::ispunct, ' ');
 }
 
 void Parser::exclude_stop_words(str& raw_str) const {
