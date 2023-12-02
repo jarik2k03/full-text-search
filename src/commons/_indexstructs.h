@@ -4,7 +4,9 @@
 #define INDEXSTRUCTS_H
 
 #include <commons/_abstractions.h>
+#include <cstdint>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 struct InvertedIndex {
@@ -48,10 +50,9 @@ struct scoredoc {
   }
 };
 using forwardmap = std::map<str, forwardIndex>; // ключ - docID
-using scoremap = std::map<uint, double>; // ключ - docID
-using scoreforwardmap = std::map<uint, scoredoc>; // ключ - docID
-using scoredocs =
-    std::vector<std::pair<uint, scoredoc>>; // расширенный forwardmap
+using scoreumap = std::map<uint, double>; // ключ - docID
+using scoreforwardumap = std::map<uint, scoredoc>; // ключ - docID
+using scoredocs = std::vector<std::pair<uint, scoredoc>>;
 using invertedmap = std::map<str, InvertedIndex>; // ключ - ngram
 using booktagsvector = std::vector<std::pair<str, short>>;
 using forwardmaps = std::vector<forwardmap>;

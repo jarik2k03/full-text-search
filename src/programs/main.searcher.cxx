@@ -34,8 +34,8 @@ bool process_command(
       t.history_add(request);
     }
     str title_request = ss.rdbuf()->str();
-    searcher.search(accessor, title_request);
-
+    const scoredocs documents = searcher.search(accessor, title_request);
+    searcher.print_results(documents, 0, 24);
   } else if (line.empty()) {
     return false;
   }
@@ -50,7 +50,8 @@ void search_with_xml_template(
   IndexProcessor searcher(config.get_parser_opts(), attrs);
   TextIndexAccessor accessor(config, indexpath);
 
-  searcher.search(accessor, attrs._title_request);
+  const scoredocs documents = searcher.search(accessor, attrs.title_request);
+  searcher.print_results(documents, 0, 24);
 }
 
 void launch_interactive_mode(Configurator& config, cstr& indexpath) {

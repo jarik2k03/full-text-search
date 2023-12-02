@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <searcher>
-    <request>potar chambar</request>
+    <request>potar charger</request>
     <subrequest attribute="Authors">bryce</subrequest>
-    <subrequest attribute="Language_Code">eng</subrequest>
     <subrequest attribute="Publication_date">1996</subrequest>
     <subrequest attribute="Publisher">ballantine books</subrequest>
 </searcher>

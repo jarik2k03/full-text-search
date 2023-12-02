@@ -35,11 +35,11 @@ SearchState Configurator::get_request_from_doc(cstr& filename) {
   pugi::xml_document doc;
   doc.load_file(filename.c_str());
   const pugi::xml_node searcher = doc.child("searcher");
-  options._title_request = searcher.child("request").text().as_string();
+  options.title_request = searcher.child("request").text().as_string();
   for (pugi::xml_node subreq : searcher.children("subrequest")) {
     cstr attribute = subreq.attribute("attribute").as_string();
     cstr request = subreq.text().as_string();
-    options._search_attrs.insert({attribute, request});
+    options.search_attrs.insert({attribute, request});
   }
   return options;
 }

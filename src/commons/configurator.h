@@ -21,8 +21,8 @@ struct IdxBuilderOpts {
 };
 
 struct SearchState {
-  str _title_request;
-  std::map<str, str> _search_attrs;
+  str title_request;
+  std::map<str, str> search_attrs;
 };
 
 class Configurator {

@@ -12,7 +12,6 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
-#include <set>
 
 class IndexAccessor {
  public:
@@ -20,9 +19,9 @@ class IndexAccessor {
   virtual invertedmap access_inverted(
       const ParserResult& ngrams,
       cstr& attr_name) const noexcept = 0;
-  virtual scoreforwardmap access_forward(
+  virtual scoreforwardumap access_forward(
       const invertedmap& im) const noexcept = 0;
-  virtual scoremap access_id(const invertedmap& im) const noexcept = 0;
+  virtual scoreumap access_id(const invertedmap& im) const noexcept = 0;
   virtual forwardIndex read_forward(std::ifstream& fin) const noexcept = 0;
   virtual InvertedIndex read_inverted(cstr& line) const noexcept = 0;
 };
@@ -39,8 +38,9 @@ class TextIndexAccessor : public IndexAccessor {
   TextIndexAccessor(const Configurator& c, cstr& ip);
   invertedmap access_inverted(const ParserResult& ngrams, cstr& attr_name)
       const noexcept override;
-  scoreforwardmap access_forward(const invertedmap& im) const noexcept override;
-  scoremap access_id(const invertedmap& im) const noexcept override;
+  scoreforwardumap access_forward(
+      const invertedmap& im) const noexcept override;
+  scoreumap access_id(const invertedmap& im) const noexcept override;
   forwardIndex read_forward(std::ifstream& fin) const noexcept override;
   InvertedIndex read_inverted(cstr& line) const noexcept override;
 
@@ -55,32 +55,36 @@ class TextIndexAccessor : public IndexAccessor {
 class IndexProcessor {
  private:
   std::map<str, str> search_attrs;
-  scoreforwardmap doc_list;
+  scoreforwardumap doc_list;
   Parser parser;
   int all_docs;
 
+  void summ_score(scoreumap& doc_ids);
+  scoredocs sort_results() const noexcept;
+  bool access_all_docs_dat(cstr& idx_path) noexcept;
+
  public:
+  void calc_score(const ParserResult& pr, const invertedmap& entries);
+  void calc_score(
+      const ParserResult& pr,
+      scoreumap& docs,
+      const invertedmap& entries);
   IndexProcessor(const ParserOpts& po);
   IndexProcessor(const ParserOpts& po, const SearchState& s);
   void add_attribute(cstr& attr);
   int remove_attribute(cstr& attr);
   std::map<str, str>& get_attributes();
-  bool access_all_docs_dat(cstr& idx_path) noexcept;
-  void sort_print_results(cint row, cint ncols = 20) const noexcept;
-  void summ_score(scoremap& doc_ids);
-  void calc_score(const ParserResult& pr, const invertedmap& entries);
-  void calc_score(
-      const ParserResult& pr,
-      scoremap& docs,
-      const invertedmap& entries);
-  void search(TextIndexAccessor& access, str& title_request);
+  void print_results(const scoredocs& res, cint row, cint ncols = 20)
+      const noexcept;
+  scoredocs search(TextIndexAccessor& access, str& title_request);
+
   int get_all_docs() const {
     return all_docs;
   }
   void set_all_docs(int d) {
     all_docs = d;
   }
-  void set_doc_list(scoreforwardmap& d) {
+  void set_doc_list(scoreforwardumap& d) {
     doc_list = d;
   }
   Parser get_parser() const {

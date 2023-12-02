@@ -35,7 +35,7 @@ GTEST_TEST(searcher, doc_frequency) {
 }
 
 GTEST_TEST(searcher, calc_score) {
-  scoreforwardmap findex = {
+  scoreforwardumap findex = {
       {3, {{"Harry Potter and Half blood prince", "2"}, 0.0}},
       {14, {{"Princess on tiny pea", "12"}, 0.0}},
       {917, {{"Fix price work manual", "3"}, 0.0}}};
@@ -78,7 +78,7 @@ GTEST_TEST(searcher, calc_score) {
 
   ip.calc_score(pr, iindex);
 
-  scoreforwardmap expected = {
+  scoreforwardumap expected = {
       {3, {{"Harry Potter and Half blood prince", "2"}, 17.792072084529991}},
       {14, {{"Princess on tiny pea", "12"}, 8.8048752638680199}},
       {917, {{"Fix price work manual", "3"}, 1.8971199848858813}}};

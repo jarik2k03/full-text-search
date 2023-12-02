@@ -1,6 +1,8 @@
 #include "searcher.h"
 
-void IndexProcessor::search(TextIndexAccessor& access, str& title_request) {
+scoredocs IndexProcessor::search(
+    TextIndexAccessor& access,
+    str& title_request) {
   access_all_docs_dat(access.get_index_path());
   // поиск обратного индекса для всех атрибутов
   const ParserResult pr = parser.parse(title_request);
@@ -11,25 +13,30 @@ void IndexProcessor::search(TextIndexAccessor& access, str& title_request) {
   for (auto& [attr, request] : search_attrs) {
     const ParserResult pr = parser.parse(request);
     const invertedmap entr = access.access_inverted(pr, attr);
-    scoremap docIDmap = access.access_id(entr);
+    scoreumap docIDmap = access.access_id(entr);
 
     calc_score(pr, docIDmap, entr);
     summ_score(docIDmap);
   }
-  sort_print_results(0);
+  const scoredocs documents = sort_results();
+  return documents;
 }
 
-void IndexProcessor::sort_print_results(cint row, cint ncols) const noexcept {
-  scoredocs res(doc_list.begin(), doc_list.end());
+scoredocs IndexProcessor::sort_results() const noexcept {
+  scoredocs results(doc_list.begin(), doc_list.end());
 
   std::sort(
-      res.begin(),
-      res.end(),
-      [](const std::pair<uint, scoredoc>& _1,
-         const std::pair<uint, scoredoc>& _2) {
-        return _1.second.score > _2.second.score;
+      results.begin(),
+      results.end(),
+      [](const std::pair<uint, scoredoc>& st,
+         const std::pair<uint, scoredoc>& nd) {
+        return st.second.score > nd.second.score;
       });
+  return results;
+}
 
+void IndexProcessor::print_results(const scoredocs& res, cint row, cint ncols)
+    const noexcept {
   uint counter = 0;
   std::cout << "N\tRating\tBookID\tTitle\n";
   for (const auto& [id, doc] : res) {
@@ -39,7 +46,7 @@ void IndexProcessor::sort_print_results(cint row, cint ncols) const noexcept {
   }
 }
 
-void IndexProcessor::summ_score(scoremap& doc_ids) {
+void IndexProcessor::summ_score(scoreumap& doc_ids) {
   for (auto& [id, score] : doc_ids) {
     auto doc_node = doc_list.find(id);
     if (doc_node != doc_list.end()) {
@@ -69,7 +76,7 @@ void IndexProcessor::calc_score(
 
 void IndexProcessor::calc_score(
     const ParserResult& pr,
-    scoremap& docs,
+    scoreumap& docs,
     const invertedmap& entries) {
   for (auto& [id, docs] : docs) {
     for (const auto& [ngram, p] : pr.ngrams) {
@@ -102,7 +109,7 @@ IndexProcessor::IndexProcessor(const ParserOpts& po) : parser(po) {
 }
 
 IndexProcessor::IndexProcessor(const ParserOpts& po, const SearchState& s)
-    : parser(po), search_attrs(s._search_attrs) {
+    : parser(po), search_attrs(s.search_attrs) {
 }
 
 TextIndexAccessor::TextIndexAccessor(const Configurator& c, cstr& ip)
@@ -112,9 +119,9 @@ TextIndexAccessor::TextIndexAccessor(const Configurator& c, cstr& ip)
       index_path(ip) {
 }
 
-scoreforwardmap TextIndexAccessor::access_forward(
+scoreforwardumap TextIndexAccessor::access_forward(
     const invertedmap& im) const noexcept {
-  scoreforwardmap docs;
+  scoreforwardumap docs;
   std::ifstream found_document;
   for (const auto& [id, ii] : im) {
     for (const auto& [id, entries] : ii.map) {
@@ -132,8 +139,8 @@ scoreforwardmap TextIndexAccessor::access_forward(
   return docs;
 }
 
-scoremap TextIndexAccessor::access_id(const invertedmap& im) const noexcept {
-  scoremap docs;
+scoreumap TextIndexAccessor::access_id(const invertedmap& im) const noexcept {
+  scoreumap docs;
   for (const auto& [id, ii] : im) {
     for (const auto& [id, entries] : ii.map) {
       docs.insert({static_cast<uint>(id), 0.0});
