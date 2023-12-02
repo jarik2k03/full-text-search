@@ -31,8 +31,10 @@ bool process_command(
     for (auto& [attribute, request] : searcher.get_attributes()) {
       cstr fts_label = "(fts::" + attribute;
       request = t.input(fts_label + ") ");
+      t.history_add(request);
     }
-    searcher.search(accessor);
+    str title_request = ss.rdbuf()->str();
+    searcher.search(accessor, title_request);
 
   } else if (line.empty()) {
     return false;
@@ -40,19 +42,28 @@ bool process_command(
   return true;
 }
 
+void search_with_xml_template(
+    Configurator& config,
+    cstr& indexpath,
+    cstr& requestpath) {
+  SearchState attrs = config.get_request_from_doc(requestpath);
+  IndexProcessor searcher(config.get_parser_opts(), attrs);
+  TextIndexAccessor accessor(config, indexpath);
+
+  searcher.search(accessor, attrs._title_request);
+}
+
 void launch_interactive_mode(Configurator& config, cstr& indexpath) {
+  IndexProcessor searcher(config.get_parser_opts());
+  TextIndexAccessor accessor(config, indexpath);
   replxx::Replxx terminal;
-  IndexProcessor processor(config.get_parser_opts());
-  TextIndexAccessor accessor(
-      config.get_parser_opts(),
-      config.get_writer_opts(),
-      config.get_builder_opts(),
-      indexpath);
+
   terminal.disable_bracketed_paste();
   terminal.history_load("user/.request_history");
   while (true) {
-    str command = terminal.input("(fts) ");
-    if (!process_command(command, processor, accessor, terminal))
+    cstr command = terminal.input("(fts) ");
+    terminal.history_add(command);
+    if (!process_command(command, searcher, accessor, terminal))
       break;
     std::cout << std::endl;
   }
@@ -85,9 +96,8 @@ int main(int argc, char** argv) {
     if (!pr.count("query")) {
       launch_interactive_mode(user_config, pr["index"].as<str>());
     } else {
-      std::cout << "Команда разработчиков приносит извинения. Сырое фуфло не "
-                   "имеет поддержки запросов.\n";
-      exit(-2);
+      search_with_xml_template(
+          user_config, pr["index"].as<str>(), pr["query"].as<str>());
     }
 
   } catch (const cxxopts::option_exists_error& e) {

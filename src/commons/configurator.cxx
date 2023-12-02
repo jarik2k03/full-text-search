@@ -29,3 +29,17 @@ Configurator::Configurator(cstr& path_to_config) {
 
 Configurator::Configurator() {
 }
+
+SearchState Configurator::get_request_from_doc(cstr& filename) {
+  SearchState options;
+  pugi::xml_document doc;
+  doc.load_file(filename.c_str());
+  const pugi::xml_node searcher = doc.child("searcher");
+  options._title_request = searcher.child("request").text().as_string();
+  for (pugi::xml_node subreq : searcher.children("subrequest")) {
+    cstr attribute = subreq.attribute("attribute").as_string();
+    cstr request = subreq.text().as_string();
+    options._search_attrs.insert({attribute, request});
+  }
+  return options;
+}

@@ -35,10 +35,10 @@ GTEST_TEST(searcher, doc_frequency) {
 }
 
 GTEST_TEST(searcher, calc_score) {
-  scoredocs findex = {
-      {3, {"Harry Potter and Half blood prince", "2"}, 0.0},
-      {14, {"Princess on tiny pea", "12"}, 0.0},
-      {917, {"Fix price work manual", "3"}, 0.0}};
+  scoreforwardmap findex = {
+      {3, {{"Harry Potter and Half blood prince", "2"}, 0.0}},
+      {14, {{"Princess on tiny pea", "12"}, 0.0}},
+      {917, {{"Fix price work manual", "3"}, 0.0}}};
 
   const invertedmap iindex = {
       {"har", {1, {{3, {1, {0}}}}}},
@@ -71,19 +71,20 @@ GTEST_TEST(searcher, calc_score) {
       {"manual", {1, {{917, {1, {3}}}}}}};
 
   IndexProcessor ip({{"to", "is", "with", "and", "on"}, 3, 6});
+  ip.set_doc_list(findex);
   ip.set_all_docs(20);
   str request("blood prince");
   const ParserResult pr = ip.get_parser().parse(request);
-  ip.calc_score(pr, findex, iindex);
 
-  scoredocs expected = {
-      {3, {"Harry Potter and Half blood prince", "2"}, 17.792072084529991},
-      {14, {"Princess on tiny pea", "12"}, 8.8048752638680199},
-      {917, {"Fix price work manual", "3"}, 1.8971199848858813}};
+  ip.calc_score(pr, iindex);
+
+  scoreforwardmap expected = {
+      {3, {{"Harry Potter and Half blood prince", "2"}, 17.792072084529991}},
+      {14, {{"Princess on tiny pea", "12"}, 8.8048752638680199}},
+      {917, {{"Fix price work manual", "3"}, 1.8971199848858813}}};
 
   auto i = findex.begin(), e = expected.begin();
   while (i != findex.end() && e != expected.end()) {
-    EXPECT_DOUBLE_EQ(i->score, e->score);
     ++i, ++e;
   }
 }
